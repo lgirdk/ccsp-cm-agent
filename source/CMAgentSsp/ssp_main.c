@@ -409,6 +409,10 @@ int main(int argc, char* argv[])
     extern ANSC_HANDLE bus_handle;
     errno_t        rc = -1;
     int ind = -1;
+
+    // Buffer characters till newline for stdout and stderr
+    setlinebuf(stdout);
+    setlinebuf(stderr);
 	
 	#ifdef FEATURE_SUPPORT_RDKLOG
 	rdk_logger_init(DEBUG_INI_NAME);
