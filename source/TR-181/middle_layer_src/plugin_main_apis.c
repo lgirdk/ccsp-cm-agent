@@ -69,6 +69,9 @@
 #include "plugin_main_apis.h"
 #include "cosa_x_cisco_com_cablemodem_internal.h"
 
+#include "cosa_lgi_cablemodem_apis.h"
+#include "cosa_lgi_cablemodem_internal.h"
+
 /*PCOSA_DIAG_PLUGIN_INFO             g_pCosaDiagPluginInfo;*/
 COSAGetParamValueByPathNameProc    g_GetParamValueByPathNameProc;
 COSASetParamValueByPathNameProc    g_SetParamValueByPathNameProc;
@@ -219,6 +222,9 @@ CosaBackEndManagerInitialize
     pMyObject->hRDKCM            = (ANSC_HANDLE)CosaRDKCentralComCableModemCreate();
     AnscTraceWarning(("  CosaRDKCentralComCableModemCreate done!\n"));
 
+    pMyObject->hLgiCableModem = (ANSC_HANDLE)CosaLgiCableModemCreate();
+    pMyObject->hLgiCMQos      = (ANSC_HANDLE)CosaLgiCableModemQosCreate();
+
     printf("************ CM initialization done! ********************\n");
     return returnStatus;
 }
@@ -272,6 +278,15 @@ CosaBackEndManagerRemove
         CosaRDKCentralComCableModemRemove((ANSC_HANDLE)pMyObject->hRDKCM);
     }
    
+    if ( pMyObject->hLgiCableModem )
+    {
+        CosaLgiCableModemRemove((ANSC_HANDLE)pMyObject->hLgiCableModem);
+    }
+
+    if ( pMyObject->hLgiCMQos )
+    {
+       CosaLgiCableModemQosRemove((ANSC_HANDLE)pMyObject->hLgiCMQos);
+    }
 
     /* Remove self */
     AnscFreeMemory((ANSC_HANDLE)pMyObject);
