@@ -36,3 +36,5 @@ libCcspCMAgent_middle_layer_src_la_LDFLAGS =  -lccsp_common -lcm_mgnt
 if FEATURE_WAN_FAIL_OVER
 libCcspCMAgent_middle_layer_src_la_SOURCES += cosa_rbus_handler_apis.c
 endif
+
+libCcspCMAgent_middle_layer_src_la_SOURCES += cosa_lgi_cablemodem_dml.c cosa_lgi_cablemodem_internal.c

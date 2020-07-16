@@ -32,3 +32,5 @@ libCcspCMAgent_integration_src_shared_la_CPPFLAGS = \
 
 libCcspCMAgent_integration_src_shared_la_SOURCES = cosa_x_cisco_com_cablemodem_apis.c cosa_device_info_apis.c cosa_x_rdkcentral_com_cablemodem_apis.c
 libCcspCMAgent_integration_src_shared_la_LDFLAGS = -lccsp_common -lcm_mgnt -lsecure_wrapper -lhal_platform
+
+libCcspCMAgent_integration_src_shared_la_SOURCES += cosa_lgi_cablemodem_apis.c
