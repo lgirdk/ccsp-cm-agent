@@ -1481,6 +1481,231 @@
 	  </parameters>	
   </object>
 <?endif?>
+
+	<object>
+	<name>X_LGI-COM_CableModem</name>
+	<objectType>object</objectType>
+	<functions>
+		<func_GetParamBoolValue>LgiCableModem_GetParamBoolValue</func_GetParamBoolValue>
+		<func_GetParamIntValue>LgiCableModem_GetParamIntValue</func_GetParamIntValue>
+		<func_GetParamUlongValue>LgiCableModem_GetParamUlongValue</func_GetParamUlongValue>
+		<func_GetParamStringValue>LgiCableModem_GetParamStringValue</func_GetParamStringValue>
+		<func_SetParamBoolValue>LgiCableModem_SetParamBoolValue</func_SetParamBoolValue>
+		<func_SetParamUlongValue>LgiCableModem_SetParamUlongValue</func_SetParamUlongValue>
+		<func_Validate>LgiCableModem_Validate</func_Validate>
+		<func_Commit>LgiCableModem_Commit</func_Commit>
+		<func_Rollback>LgiCableModem_Rollback</func_Rollback>
+	</functions>
+	<parameters>
+		<parameter>
+		<name>CMStatus</name>
+		<description>The current operational state of the cable modem. When Online the modem is operational without issues. If modem behavior is altered due to mechnisms like Energy Management and Temperature protection, the state can change to Other</description>
+		<type>string: Other(1),Online(2),PartialServiceDs(3),PartialServiceUs(4),PartialServiceDsUs(5))</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>ToDStatus</name>
+		<description>Reflects current ToD status</description>
+		<type>string: Unestablished(1),Established(2)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>CmDoc30SwRegistrationState</name>
+		<type>string: docsis-DownstreamScanning(1),docsis-DownstreamRanging(2),docsis-UpstreamRanging(3),docsis-DHCP(4),docsis-TFTP(5),docsis-DataRegComplete(6)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>T1Timeouts</name>
+		<type>unsignedInt</type>
+		<syntax>uint32</syntax>
+		<writable>false</writable>
+		</parameter>
+
+		<parameter>
+		<name>SoftwareOperStatus</name>
+		<description>Cable modem Software upgrade status in compliance with Docsis RFI specification</description>
+		<type>string: InProgress(1),CompleteFromProvisioning(2),CompleteFromMgt(3),Failed(4),Other(5)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>EnergyMgtOperStatus</name>
+		<description>To indicate whether the CM is currently operating in Energy Management 1x1 Mode.</description>
+		<type>string: Disabled(0),1x1(1)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>OvertempProtModeState</name>
+		<description>To indicate whether the CM is currently operating in over temperature protected mode.</description>
+		<type>string: Normal(0),Too high(1)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>PartServiceFallback20</name>
+		<type>string: disable(0),enable(1)</type>
+		<syntax>uint32/mapped</syntax>
+		</parameter>
+
+		<parameter>
+		<name>DownstreamPrimaryChannelID</name>
+		<description>CMTS ID of the primary downstream channel</description>
+		<type>unsignedInt[:255]</type>
+		<syntax>uint32</syntax>
+		</parameter>
+	</parameters>
+	<objects>
+		<object>
+			<name>QosServiceFlow</name>
+			<objectType>object</objectType>
+			<functions>
+			</functions>
+			<objects>
+				<object>
+					<name>Upstream</name>
+					<objectType>dynamicTable</objectType>
+					<maxInstance>64</maxInstance>
+					<functions>
+						<func_GetEntryCount>Lgi_US_QosServiceFlow_GetEntryCount</func_GetEntryCount>
+						<func_GetEntry>Lgi_US_QosServiceFlow_GetEntry</func_GetEntry>
+						<func_IsUpdated>Lgi_US_QosServiceFlow_IsUpdated</func_IsUpdated>
+						<func_Synchronize>Lgi_US_QosServiceFlow_Synchronize</func_Synchronize>
+						<func_GetParamUlongValue>Lgi_QosServiceFlow_GetParamUlongValue</func_GetParamUlongValue>
+					</functions>
+					<parameters>
+						<parameter>
+						<name>FlowSID</name>
+						<description>Service Identifier assigned to a service flow</description>
+						<type>unsignedInt</type>
+						<syntax>uint32</syntax>
+						</parameter>
+					</parameters>
+					<objects>
+						<object>
+							<name>QosParamSet</name>
+							<objectType>dynamicTable</objectType>
+							<maxInstance>64</maxInstance>
+							<functions>
+								<func_GetEntryCount>Lgi_US_QosParamSet_GetEntryCount</func_GetEntryCount>
+								<func_GetEntry>Lgi_US_QosParamSet_GetEntry</func_GetEntry>
+								<func_GetParamUlongValue>Lgi_QosParamSet_GetParamUlongValue</func_GetParamUlongValue>
+							</functions>
+							<parameters>
+								<parameter>
+								<name>MaxTrafficRate</name>
+								<description>Maximum sustained traffic rate allowed for this Service Flow in bits/sec.</description>
+								<type>unsignedInt</type>
+								<syntax>uint32</syntax>
+								</parameter>
+
+								<parameter>
+								<name>MaxTrafficBurst</name>
+								<description>Maximum burst in bytes allowed on a Service Flow (bytes).</description>
+								<type>unsignedInt</type>
+								<syntax>uint32</syntax>
+								</parameter>
+
+								<parameter>
+								<name>MinReservedRate</name>
+								<description>Guaranteed minimum rate in bits/sec.</description>
+								<type>unsignedInt</type>
+								<syntax>uint32</syntax>
+								</parameter>
+
+								<parameter>
+								<name>MaxConcatBurst</name>
+								<description>Maximum concatenated burst in bytes that an upstream Service Flow is allowed (bytes).</description>
+								<type>unsignedInt</type>
+								<syntax>uint32</syntax>
+								</parameter>
+
+								<parameter>
+								<name>SchedulingType</name>
+								<description>The upstream scheduling service used for this service flow.</description>
+								<type>string: undefined(1),bestEffort(2),nonRealTimePollingService(3),realTimePollingService(4),unsolicitedGrantServiceWithAD(5),unsolicitedGrantService(6)</type>
+								<syntax>uint32/mapped</syntax>
+								</parameter>
+							</parameters>
+						</object>
+					</objects>
+				</object>
+				<object>
+					<name>Downstream</name>
+					<objectType>dynamicTable</objectType>
+					<maxInstance>64</maxInstance>
+					<functions>
+						<func_GetEntryCount>Lgi_DS_QosServiceFlow_GetEntryCount</func_GetEntryCount>
+						<func_GetEntry>Lgi_DS_QosServiceFlow_GetEntry</func_GetEntry>
+						<func_IsUpdated>Lgi_DS_QosServiceFlow_IsUpdated</func_IsUpdated>
+						<func_Synchronize>Lgi_DS_QosServiceFlow_Synchronize</func_Synchronize>
+						<func_GetParamUlongValue>Lgi_QosServiceFlow_GetParamUlongValue</func_GetParamUlongValue>
+					</functions>
+					<parameters>
+						<parameter>
+						<name>FlowSID</name>
+						<description>Service Identifier assigned to a service flow</description>
+						<type>unsignedInt</type>
+						<syntax>uint32</syntax>
+						</parameter>
+					</parameters>
+						<objects>
+							<object>
+								<name>QosParamSet</name>
+								<objectType>dynamicTable</objectType>
+								<maxInstance>64</maxInstance>
+								<functions>
+									<func_GetEntryCount>Lgi_DS_QosParamSet_GetEntryCount</func_GetEntryCount>
+									<func_GetEntry>Lgi_DS_QosParamSet_GetEntry</func_GetEntry>
+									<func_GetParamUlongValue>Lgi_QosParamSet_GetParamUlongValue</func_GetParamUlongValue>
+								</functions>
+								<parameters>
+									<parameter>
+									<name>MaxTrafficRate</name>
+									<description>Maximum sustained traffic rate allowed for this Service Flow in bits/sec.</description>
+									<type>unsignedInt</type>
+									<syntax>uint32</syntax>
+									</parameter>
+
+									<parameter>
+									<name>MaxTrafficBurst</name>
+									<description>Maximum burst in bytes allowed on a Service Flow (bytes).</description>
+									<type>unsignedInt</type>
+									<syntax>uint32</syntax>
+									</parameter>
+
+									<parameter>
+									<name>MinReservedRate</name>
+									<description>Guaranteed minimum rate in bits/sec.</description>
+									<type>unsignedInt</type>
+									<syntax>uint32</syntax>
+									</parameter>
+
+									<parameter>
+									<name>MaxConcatBurst</name>
+									<description>Maximum concatenated burst in bytes that an upstream Service Flow is allowed (bytes).</description>
+									<type>unsignedInt</type>
+									<syntax>uint32</syntax>
+									</parameter>
+
+									<parameter>
+									<name>SchedulingType</name>
+									<description>The upstream scheduling service used for this service flow.</description>
+									<type>string: undefined(1),bestEffort(2),nonRealTimePollingService(3),realTimePollingService(4),unsolicitedGrantServiceWithAD(5),unsolicitedGrantService(6)</type>
+									<syntax>uint32/mapped</syntax>
+									</parameter>
+								</parameters>
+							</object>
+						</objects>
+					</object>
+				</objects>
+			</object>
+		</objects>
+	</object>
+
   </objects>
 
 </dataModelInfo>
