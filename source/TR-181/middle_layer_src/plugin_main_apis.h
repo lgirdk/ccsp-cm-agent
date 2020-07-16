@@ -118,6 +118,7 @@ extern COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
 #define COSA_DATAMODEL_BASE_OID                                 0
 #define COSA_DATAMODEL_CM_OID                                   32
 #define COSA_DATAMODEL_RDKCENTRAL_CM_OID                        42
+#define COSA_DATAMODEL_LGI_CABLEMODEM_OID                       125
 
 /*
  * This is the cosa datamodel backend manager which is used to manager all backend object
@@ -127,7 +128,9 @@ extern COSARegisterCallBackAfterInitDmlProc  g_RegisterCallBackAfterInitDml;
     COSA_BASE_CONTENT                                                                       \
     ANSC_HANDLE                  hCM;                                                       \
     ANSC_HANDLE                  hDI;                                                       \
-    ANSC_HANDLE                  hRDKCM;                                                       \    
+    ANSC_HANDLE                  hRDKCM;                                                    \
+    ANSC_HANDLE                  hLgiCableModem;                                            \
+    ANSC_HANDLE                  hLgiCMQos;                                                 \
     PCOSA_PLUGIN_INFO            hCosaPluginInfo;											
 
 typedef  struct
