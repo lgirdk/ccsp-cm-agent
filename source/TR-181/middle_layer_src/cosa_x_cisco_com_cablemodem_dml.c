@@ -3030,6 +3030,28 @@ UpstreamChannel_GetParamUlongValue
         return TRUE;
     }
 
+    /* LGI ADD - START */
+    rc = strcmp_s("T3Timeouts",strlen("T3Timeouts"), ParamName,&ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *puLong = pConf->T3Timeouts;
+
+        return TRUE;
+    }
+
+    rc = strcmp_s("T4Timeouts",strlen("T4Timeouts"), ParamName,&ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *puLong = pConf->T4Timeouts;
+
+        return TRUE;
+    }
+    /* LGI ADD - END */
+
     /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
     return FALSE;
 }
