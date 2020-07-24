@@ -1066,6 +1066,17 @@
                <syntax>string</syntax>
 
              </parameter>
+
+		<parameter>
+			<name>T3Timeouts</name>
+			<type>unsignedInt</type>
+			<syntax>uint32</syntax>
+		</parameter>
+		<parameter>
+			<name>T4Timeouts</name>
+			<type>unsignedInt</type>
+			<syntax>uint32</syntax>
+		</parameter>
             
              </parameters>
                          
