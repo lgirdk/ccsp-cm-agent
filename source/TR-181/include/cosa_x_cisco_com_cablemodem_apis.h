@@ -127,6 +127,8 @@ _COSA_CM_US_CHANNEL
     char                            SymbolRate[64];
     char                            Modulation[64];
     char                            LockStatus[64];
+    ULONG                           T3Timeouts;
+    ULONG                           T4Timeouts;
 }
 COSA_CM_US_CHANNEL, *PCOSA_CM_US_CHANNEL;
 
