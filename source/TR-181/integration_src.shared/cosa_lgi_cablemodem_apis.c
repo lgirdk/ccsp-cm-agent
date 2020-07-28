@@ -433,3 +433,30 @@ CosaDmlGiGetLgiDownstreamPrimaryChannelID
     return ANSC_STATUS_SUCCESS;
 }
 
+/**************************************************************************/
+/*! \fn ANSC_STATUS CosaDmlGiGetT2Timeouts(ANSC_HANDLE hContext,
+        ULONG *pValue)
+ **************************************************************************
+ *  \brief get CM T2 Timeouts
+ *  \param[in] hContext
+ *  \param[out] pValue
+ *  \return STATUS
+ **************************************************************************/
+ANSC_STATUS
+CosaDmlGiGetT2Timeouts
+    (
+        ANSC_HANDLE                 hContext,
+        ULONG                       *pValue
+    )
+{
+    int timeouts = 0;
+
+    if ((pValue == NULL) || (docsis_getCmT2Timeouts(&timeouts) != ANSC_STATUS_SUCCESS))
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+    *pValue = (ULONG)timeouts;
+
+    return ANSC_STATUS_SUCCESS;
+}
+
