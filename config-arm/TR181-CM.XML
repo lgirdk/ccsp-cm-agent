@@ -1504,6 +1504,13 @@
 		</parameter>
 
 		<parameter>
+		<name>T2Timeouts</name>
+		<type>unsignedInt</type>
+		<syntax>uint32</syntax>
+		<writable>false</writable>
+		</parameter>
+
+		<parameter>
 		<name>SoftwareOperStatus</name>
 		<description>Cable modem Software upgrade status in compliance with Docsis RFI specification</description>
 		<type>string: InProgress(1),CompleteFromProvisioning(2),CompleteFromMgt(3),Failed(4),Other(5)</type>
