@@ -211,6 +211,14 @@ LgiCableModem_GetParamUlongValue
         }
         return TRUE;
     }
+    if (strcmp(ParamName, "T2Timeouts") == 0)
+    {
+        if (ANSC_STATUS_SUCCESS != CosaDmlGiGetT2Timeouts(NULL, puLong))
+        {
+            *puLong = 0;
+        }
+        return TRUE;
+    }
     if (strcmp(ParamName, "CMStatus") == 0)
     {
         if (ANSC_STATUS_SUCCESS != CosaDmlGiGetLgiCMStatus(NULL, puLong))
