@@ -15,8 +15,16 @@
  **********************************************************************/
 
 #include "cosa_lgi_cablemodem_apis.h"
-#include <puma6/status.h>
 #include "cosa_x_cisco_com_cablemodem_apis.h"
+
+/*
+   Define Intel status type ( TEMPORARY HACK ). Currently functions in the CM
+   HAL are returning or expecting them - that needs to be fixed. This code
+   should use types defined by the HAL interface only, and nothing from the SOC
+   specific layers below.
+*/
+#define STATUS_OK 0
+
 
 /**************************************************************************/
 /*! \fn ANSC_STATUS CosaDmlGiGetCmDoc30SwRegistrationState(ANSC_HANDLE hContext,
@@ -325,6 +333,7 @@ ANSC_STATUS CosaDmlGiGetQosServiceflow
     int32_t sf_index;
     int32_t flow_sid, direction;
     int rc;
+    ANSC_STATUS result = ANSC_STATUS_SUCCESS;
     cm_lgi_qos_sflow_t *sfChannel=*serviceFlowChannel;
 
     for (sf_index = 0; sf_index < serviceFlowCount; sf_index++)
@@ -341,10 +350,11 @@ ANSC_STATUS CosaDmlGiGetQosServiceflow
         }    
         else
         {
+            result = ANSC_STATUS_FAILURE;
             break;
         }
     }
-    return rc;
+    return result;
 }
 
 /**************************************************************************/
@@ -368,11 +378,12 @@ ANSC_STATUS CosaDmlGiGetQosServiceflowParamset
     int sf_id;
     int MaxTrafficRate, MaxTrafficBurst, MinReservedRate, MaxConcatBurst, SchedulingType;
     int status;
+    ANSC_STATUS result = ANSC_STATUS_SUCCESS;
     cm_lgi_qos_paramset_t *sfParamSet = *serviceFlowParamset;
     cm_lgi_qos_sflow_t *sfChannel=*serviceFlowChannel;
     if(sfChannel==NULL || sfParamSet==NULL)
     {
-        return STATUS_ERROR_INVALID_ARGUMENT;
+        return ANSC_STATUS_FAILURE;
     }
 
     for (sf_index = 0; sf_index < serviceFlowCount; sf_index++)
@@ -397,12 +408,13 @@ ANSC_STATUS CosaDmlGiGetQosServiceflowParamset
             }
             else
             {
+                result = ANSC_STATUS_FAILURE;
                 break;
             }
             sfChannel++;       
         }
     }
-    return status;
+    return result;
 }
 
 /**************************************************************************/
