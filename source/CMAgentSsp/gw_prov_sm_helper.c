@@ -26,6 +26,9 @@
 #include <fcntl.h>
 #include <time.h>
 
+#include <custom_alias_utils.h>
+#include <ansc_platform.h>
+
 #include "gw_prov_sm_helper.h"
 
 typedef struct _DmObject
@@ -797,6 +800,19 @@ static void *GW_DmObjectThread(void *pParam)
                 {
                     fprintf(stderr, "Invalid format for TLV202.43.12: '%s'\n", tlvData);
                     continue;
+                }
+
+                {
+                    int relMem = 0;
+                    internalName = aliasGetInternalName(dmObject.Name, &relMem);
+                    if (internalName)
+                    {
+                        printf("gw-prov-app: replacing TLV202.43.12 parameter %s with internal name %s\n", dmObject.Name, internalName);
+                        strncpy(dmObject.Name, internalName, sizeof(dmObject.Name) - 1);
+                        dmObject.Name[sizeof(dmObject.Name)-1] = '\0';
+                        if (relMem)
+                            AnscFreeMemory(internalName);
+                    }
                 }
 
                 /* convert TR069 type to dmcli type */
