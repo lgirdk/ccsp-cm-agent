@@ -25,17 +25,6 @@
 */
 #include <cm_hal.h>
 
-/*
-   Define Intel status type ( TEMPORARY HACK ). Currently functions in the CM
-   HAL are returning or expecting them - that needs to be fixed. This code
-   should use types defined by the HAL interface only, and nothing from the SOC
-   specific layers below.
-*/
-#ifndef STATUS_OK
-#define STATUS_OK 0
-#endif
-
-
 /**************************************************************************/
 /*! \fn ANSC_STATUS CosaDmlGiGetCmDoc30SwRegistrationState(ANSC_HANDLE hContext,
         ULONG *pValue)                                       
@@ -84,7 +73,7 @@ CosaDmlGiGetT1Timeouts
 {
     int timeouts = 0;
 
-    if ((pValue == NULL) || (docsis_getCmT1Timeouts(&timeouts) != ANSC_STATUS_SUCCESS))
+    if ((pValue == NULL) || (docsis_getCmT1Timeouts(&timeouts) != RETURN_OK))
     {
         return ANSC_STATUS_FAILURE;
     }
@@ -112,7 +101,7 @@ CosaDmlGiGetHorizOvertempProtModeState
 {
     int hotStatus = 0;
     
-    if ((pValue == NULL) || (docsis_getHorizOvertempProtModeState(&hotStatus) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getHorizOvertempProtModeState(&hotStatus) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
@@ -143,7 +132,7 @@ CosaDmlGiGetLgiCMStatus
     int retVal = ANSC_STATUS_SUCCESS;
     int cmStatus = 0;
 
-    if ((pValue == NULL) || (docsis_getCMOperationStatus(&cmStatus) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getCMOperationStatus(&cmStatus) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
@@ -172,7 +161,7 @@ CosaDmlGiGetLgiSoftwareOperStatus
 {
     int swOperStatus = 0;
 
-    if ((pValue == NULL) || (cm_getSoftwareOperStatus(&swOperStatus) != ANSC_STATUS_SUCCESS))
+    if ((pValue == NULL) || (cm_getSoftwareOperStatus(&swOperStatus) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
@@ -237,7 +226,7 @@ CosaDmlGiGetLgiEnergyMgtOperStatus
 {
     int energyMgtOperStatus = 0;
     
-    if ((pValue == NULL) || (docsis_getEnergyMode(&energyMgtOperStatus) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getEnergyMode(&energyMgtOperStatus) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
@@ -265,7 +254,7 @@ CosaDmlGiGetPartServiceFallback20
 {
     int partServiceFallback = 0;
     
-    if ((pValue == NULL) || (docsis_getPartServiceFallback20(&partServiceFallback) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getPartServiceFallback20(&partServiceFallback) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
@@ -299,7 +288,7 @@ ANSC_STATUS CosaDmlGiGetQosServiceflow
     for (sf_index = 0; sf_index < serviceFlowCount; sf_index++)
     {       
         rc = qos_getServiceFlowParam(sf_index,&flow_sid,&direction);
-        if(rc == STATUS_OK)
+        if(rc == RETURN_OK)
         {
             if(sfChannel)
             {
@@ -353,7 +342,7 @@ ANSC_STATUS CosaDmlGiGetQosServiceflowParamset
             sf_id = sfChannel->FlowSID;
             MaxTrafficRate = MaxTrafficBurst = MinReservedRate = MaxConcatBurst = SchedulingType = 0;
             status = qos_getServiceFlowParamsetDetails(sf_id, &MaxTrafficRate, &MaxTrafficBurst, &MinReservedRate, &MaxConcatBurst, &SchedulingType);
-            if (STATUS_OK == status)
+            if (RETURN_OK == status)
             {
                 if(sfParamSet)
                 {
@@ -395,7 +384,7 @@ CosaDmlGiGetLgiDownstreamPrimaryChannelID
 {
     int downstreamPriChannelId = 0;
 
-    if ((pValue == NULL) || (docsis_getDownstreamPrimaryChannelID(&downstreamPriChannelId) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getDownstreamPrimaryChannelID(&downstreamPriChannelId) != RETURN_OK))
     {
         AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
