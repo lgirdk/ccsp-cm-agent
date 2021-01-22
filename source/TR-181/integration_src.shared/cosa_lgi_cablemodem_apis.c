@@ -18,12 +18,22 @@
 #include "cosa_x_cisco_com_cablemodem_apis.h"
 
 /*
+   Warning: include cm_hal.h after the cosa_*.h headers above to avoid build
+   failures due to definition of BOOLEAN from both ansc_platform.h (which
+   defines it via a typedef) and cm_hal.h (which defines it via #define).
+   Fixme: this needs a bigger cleanup...
+*/
+#include <cm_hal.h>
+
+/*
    Define Intel status type ( TEMPORARY HACK ). Currently functions in the CM
    HAL are returning or expecting them - that needs to be fixed. This code
    should use types defined by the HAL interface only, and nothing from the SOC
    specific layers below.
 */
+#ifndef STATUS_OK
 #define STATUS_OK 0
+#endif
 
 
 /**************************************************************************/
@@ -44,61 +54,11 @@ CosaDmlGiGetCmDoc30SwRegistrationState
         ULONG                       *pValue
     )
 {
-    int swRegState = 0;
-    CmMacParamsStatus_e macStatus;
+    int swRegState = CM_REGSTATE_UNKNOWN;
 
-    if ((pValue == NULL) || (docsis_getCmDoc30SwRegistrationState(&macStatus) != STATUS_OK))
+    if ((pValue == NULL) || (docsis_getCmDoc30SwRegistrationState(&swRegState) != RETURN_OK))
     {
         return ANSC_STATUS_FAILURE;
-    }
-
-    switch(macStatus)
-    {
-        case DOCSIS_CM_STAT_PARAMS_OTHER:
-        case DOCSIS_CM_STAT_PARAMS_NOT_READY:
-        case DOCSIS_CM_STAT_PARAMS_NOT_SYNCHRONIZED:
-        {
-            swRegState = 1;
-            break;
-        }
-        case DOCSIS_CM_STAT_PARAMS_PHY_SYNCHRONIZED:
-        case DOCSIS_CM_STAT_PARAMS_DS_TOPOLOGY_RESOLUTION_IN_PROGRESS:
-        case DOCSIS_CM_STAT_PARAMS_RANGING_IN_PROGRESS:
-        {
-            swRegState = 2;
-            break;
-        }
-        case DOCSIS_CM_STAT_PARAMS_RANGING_COMPLETE:
-        {
-            swRegState = 3;
-            break;
-        }
-        case DOCSIS_CM_STAT_PARAMS_US_PARAMETERS_ACQUIRED:
-        case DOCSIS_CM_STAT_PARAMS_EAE_IN_PROGRESS:
-        case DOCSIS_CM_STAT_PARAMS_DHCPV4_IN_PROGRESS:
-        case DOCSIS_CM_STAT_PARAMS_DHCPV6_IN_PROGRESS:
-        {
-            swRegState = 4;
-            break;
-        }
-        case DOCSIS_CM_STAT_PARAMS_DHCPV4_COMPLETE:
-        case DOCSIS_CM_STAT_PARAMS_DHCPV6_COMPLETE:
-        case DOCSIS_CM_STAT_PARAMS_TOD_ESTABLISHED:
-        {
-            swRegState = 5;
-            break;
-        }
-        case DOCSIS_CM_STAT_PARAMS_CONFIG_FILE_DOWNLOAD_COMPLETE:
-        case DOCSIS_CM_STAT_PARAMS_REGISTRATION_IN_PROGRESS:
-        case DOCSIS_CM_STAT_PARAMS_REGISTRATION_COMPLETE:
-        case DOCSIS_CM_STAT_PARAMS_BPI_INIT:
-        case DOCSIS_CM_STAT_PARAMS_OPERATIONAL:
-        {
-            swRegState = 6;
-            break;
-        }
-        default:
-            break;
     }
 
     *pValue = (ULONG)swRegState;
