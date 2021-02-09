@@ -1481,6 +1481,10 @@ static void GWP_EnableERouter(void)
 {
 #if !defined(_PLATFORM_RASPBERRYPI_)
 	GWPROV_PRINT(" Entry %s \n", __FUNCTION__);
+
+    /* Update esafe interface operating status */
+    eSafeDevice_SetErouterOperStatus(DOCESAFE_EROUTER_IFOPERSTATUS_UP);
+
     /* Update ESAFE state */
     GWP_UpdateEsafeAdminMode(eRouterMode);
 
@@ -1548,6 +1552,10 @@ static void GWP_DisableERouter(void)
 {
 #if !defined(_PLATFORM_RASPBERRYPI_)
 	GWPROV_PRINT(" Entry %s \n", __FUNCTION__);
+
+    /* Update esafe interface operating status */
+    eSafeDevice_SetErouterOperStatus(DOCESAFE_EROUTER_IFOPERSTATUS_DOWN);
+
     /* Update ESAFE state */
     GWP_UpdateEsafeAdminMode(eRouterMode);
 
@@ -3320,13 +3328,22 @@ static void GWP_act_DocsisInited_callback (void)
     {
         /* Disabled */
         operMode = DOCESAFE_EROUTER_OPER_DISABLED_extIf;
+	eSafeDevice_SetErouterOperStatus(DOCESAFE_EROUTER_IFOPERSTATUS_DOWN);
     }
     else
     {
+#if !defined (_XB6_PRODUCT_REQ_) && !defined (_COSA_BCM_ARM_)
+        /* At this point: enabled, but neither are provisioned (regardless of which is enabled) */
+        operMode = DOCESAFE_EROUTER_OPER_NOIPV4_NOIPV6_extIf;
+#else
          /* The eRouter MUST persist its initialization mode across reinitializations.So, assign last known mode*/
        eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
        GWPROV_PRINT(" eRouterMode = %d\n", eRouterMode);
        operMode = eRouterMode;
+#endif
+        /* At this point: enabled, but neither are provisioned (regardless of which is enabled) */
+        operMode = DOCESAFE_EROUTER_OPER_NOIPV4_NOIPV6_extIf;
+        eSafeDevice_SetErouterOperStatus(DOCESAFE_EROUTER_IFOPERSTATUS_UP);
     }
         GWPROV_PRINT(" operMode = %d\n", operMode);
     eSafeDevice_SetErouterOperationMode(operMode);
