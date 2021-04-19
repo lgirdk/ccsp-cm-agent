@@ -553,7 +553,7 @@ X_RDKCENTRAL_COM_CableModem_DsOfdmChan_GetParamStringValue
 
     PCOSA_X_RDKCENTRAL_COM_CM_DS_OFDM_CHAN     pDsOfdmChannel = (PCOSA_X_RDKCENTRAL_COM_CM_DS_OFDM_CHAN)hInsContext;
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "PowerLevel", TRUE))
+    if (strcmp(ParamName, "PowerLevel") == 0)
     {
         /* collect value */
         if ( _ansc_strlen(pDsOfdmChannel->PowerLevel) >= *pUlSize )
@@ -566,7 +566,7 @@ X_RDKCENTRAL_COM_CableModem_DsOfdmChan_GetParamStringValue
         return 0;
     }
 
-    if( AnscEqualString(ParamName, "SNRLevel", TRUE))
+    if (strcmp(ParamName, "SNRLevel") == 0)
     {
         /* collect value */
         if ( _ansc_strlen(pDsOfdmChannel->averageSNR) >= *pUlSize )
