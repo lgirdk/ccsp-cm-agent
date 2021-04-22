@@ -218,48 +218,29 @@ ANSC_STATUS CosaDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status)
 ANSC_STATUS CosaDmlDIGetProtocol(ANSC_HANDLE hContext, char *Protocol)
 {
 	PCOSA_DATAMODEL_DEVICEINFO     pMyObject = (PCOSA_DATAMODEL_DEVICEINFO)hContext;
-        errno_t rc = -1;
 
-	if(strlen(pMyObject->DownloadURL) == 0)
+    if (strlen(pMyObject->DownloadURL) == 0)
+    {
+        Protocol[0] = 0;
+    }
+    else if (strncasecmp(pMyObject->DownloadURL, "http", 4) == 0)
+    {
+        if ((pMyObject->DownloadURL[4] == 's') ||
+            (pMyObject->DownloadURL[4] == 'S'))
         {
-          rc = strcpy_s(Protocol,MAX_PROTOCOL, "");
-          if(rc != EOK)
-          {
-                ERR_CHK(rc);
-                return ANSC_STATUS_FAILURE;
-          }
- 
+            strcpy(Protocol, "HTTPS");
         }
-        else if(AnscEqualString2(pMyObject->DownloadURL,"https", 5, FALSE))
+        else
         {
-		rc = strcpy_s(Protocol,MAX_PROTOCOL, "HTTPS");
-                if(rc != EOK)
-               {
-                  ERR_CHK(rc);
-                  return ANSC_STATUS_FAILURE;
-               }
+            strcpy(Protocol, "HTTP");
         }
-        else if(AnscEqualString2(pMyObject->DownloadURL,"http", 4, FALSE))
-        {
-		   rc =  strcpy_s(Protocol,MAX_PROTOCOL, "HTTP");
-                   if(rc != EOK)
-                   {
-                     ERR_CHK(rc);
-                     return ANSC_STATUS_FAILURE;
-                    }
-         }
+    }
+    else
+    {
+        strcpy(Protocol, "INVALID");
+    }
 
-         else
-         {
-  
-                 rc = strcpy_s(Protocol,MAX_PROTOCOL, "INVALID");
-                 if(rc != EOK)
-                 {
-                         ERR_CHK(rc);
-                         return ANSC_STATUS_FAILURE;
-                 }
-         }
-         CcspTraceInfo((" Download Protocol is %s \n", Protocol));
+    CcspTraceInfo((" Download Protocol is %s \n", Protocol));
 	
 	return ANSC_STATUS_SUCCESS;	
 }
