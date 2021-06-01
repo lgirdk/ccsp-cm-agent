@@ -772,10 +772,10 @@
   
                 <name>EventLevel</name>
   
-                <type>unsignedInt</type>
-                
-                <syntax>uint32</syntax>
-  
+                <type>string: unknown(0), emergency(1), alert(2), critical(3), error(4), warning(5), notice(6), information(7), debug(8) </type>
+
+                <syntax>uint32/mapped</syntax>
+
               </parameter>
   
               <parameter>
@@ -813,7 +813,8 @@
                 <func_GetParamUlongValue>DownstreamChannel_GetParamUlongValue</func_GetParamUlongValue>
   
                 <func_GetParamStringValue>DownstreamChannel_GetParamStringValue</func_GetParamStringValue>
-  
+
+                <func_GetParamIntValue>DownstreamChannel_GetParamIntValue</func_GetParamIntValue>
              </functions>
             
              <parameters>
@@ -831,9 +832,9 @@
 
 			   <name>Frequency</name>
 
-			   <type>string(64)</type>
+			   <type>unsignedInt</type>
 
-               <syntax>string</syntax>
+               <syntax>uint32</syntax>
 
              </parameter>
 			 <parameter>
@@ -849,9 +850,9 @@
 
 			   <name>SNRLevel</name>
 
-			   <type>string(64)</type>
+			   <type>int</type>
 
-               <syntax>string</syntax>
+               <syntax>int</syntax>
 
              </parameter>
 			 <parameter>
@@ -943,9 +944,9 @@
 
 			   <name>Frequency</name>
 
-			   <type>string(64)</type>
+			   <type>unsignedInt</type>
 
-               <syntax>string</syntax>
+               <syntax>uint32</syntax>
 
              </parameter>
 			 <parameter>
