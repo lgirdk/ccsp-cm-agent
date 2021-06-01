@@ -2733,6 +2733,18 @@ DownstreamChannel_GetParamUlongValue
     int ind =-1;
     
     /* check the parameter name and return the corresponding value */
+    rc = strcmp_s( "Frequency",strlen("Frequency"),ParamName, &ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *puLong = strtoul(pConf->Frequency, NULL, 10);
+        if (strstr(pConf->Frequency, "MHz"))
+            *puLong *= 1000000;
+
+        return TRUE;
+    }
+
     rc =  strcmp_s("ChannelID",strlen("ChannelID"),ParamName, &ind);
     ERR_CHK(rc);
     if((!ind) && (rc == EOK))
@@ -2771,6 +2783,62 @@ DownstreamChannel_GetParamUlongValue
         /* collect value */
         *puLong = pConf->Uncorrectables;
 
+        return TRUE;
+    }
+
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return FALSE;
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        DownstreamChannel_GetParamIntValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                INT*                        pInt
+            );
+
+    description:
+
+        This function is called to retrieve INT parameter value; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                INT*                        pInt
+                The buffer of returned INT value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+DownstreamChannel_GetParamIntValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        INT*                      pInt
+    )
+{
+    PCOSA_CM_DS_CHANNEL             pConf        = (PCOSA_CM_DS_CHANNEL)hInsContext;
+    errno_t rc = -1;
+    int ind =-1;
+    
+    /* check the parameter name and return the corresponding value */
+    rc = strcmp_s("SNRLevel",strlen("SNRLevel"),ParamName,&ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *pInt = strtol(pConf->SNRLevel, NULL, 10);
         return TRUE;
     }
 
@@ -2828,28 +2896,6 @@ DownstreamChannel_GetParamStringValue
     PCOSA_CM_DS_CHANNEL             pConf        = (PCOSA_CM_DS_CHANNEL)hInsContext;
     errno_t        rc = -1;
     int ind = -1;    
-    /* check the parameter name and return the corresponding value */    
-    rc = strcmp_s( "Frequency",strlen("Frequency"),ParamName, &ind);
-    ERR_CHK(rc);
-    if((!ind) && (rc == EOK))
-
-    {
-        /* collect value */
-        if ( _ansc_strlen(pConf->Frequency) >= *pUlSize )
-        {
-            *pUlSize = _ansc_strlen(pConf->Frequency);
-            return 1;
-        }
-        
-        rc = strcpy_s(pValue,*pUlSize, pConf->Frequency);
-         if(rc != EOK)
-         {
-             ERR_CHK(rc);
-             return -1;
-         }
-
-        return 0;
-    }
 
     rc = strcmp_s("PowerLevel",strlen("PowerLevel"),ParamName,&ind);
     ERR_CHK(rc);
@@ -2864,27 +2910,6 @@ DownstreamChannel_GetParamStringValue
         }
         
         rc = strcpy_s(pValue,*pUlSize , pConf->PowerLevel);
-         if(rc != EOK)
-         {
-             ERR_CHK(rc);
-             return -1;
-         }
-
-        return 0;
-    }
-
-    rc = strcmp_s("SNRLevel",strlen("SNRLevel"),ParamName,&ind);
-    ERR_CHK(rc);
-    if((!ind) && (rc == EOK))
-    {
-        /* collect value */
-        if ( _ansc_strlen(pConf->SNRLevel) >= *pUlSize )
-        {
-            *pUlSize = _ansc_strlen(pConf->SNRLevel);
-            return 1;
-        }
-        
-        rc = strcpy_s(pValue,*pUlSize , pConf->SNRLevel);
          if(rc != EOK)
          {
              ERR_CHK(rc);
@@ -3191,6 +3216,18 @@ UpstreamChannel_GetParamUlongValue
     int ind =-1;
     
     /* check the parameter name and return the corresponding value */
+    rc = strcmp_s( "Frequency",strlen("Frequency"),ParamName, &ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *puLong = strtoul(pConf->Frequency, NULL, 10);
+        if (strstr(pConf->Frequency, "MHz"))
+            *puLong *= 1000000;
+
+        return TRUE;
+    }
+
     rc = strcmp_s("ChannelID",strlen("ChannelID"), ParamName,&ind);
     ERR_CHK(rc);
     if((!ind) && (rc == EOK))
@@ -3277,28 +3314,6 @@ UpstreamChannel_GetParamStringValue
     errno_t        rc = -1;
     int ind = -1;    
     /* check the parameter name and return the corresponding value */    
-    rc = strcmp_s( "Frequency",strlen("Frequency"),ParamName, &ind);
-    ERR_CHK(rc);
-    if((!ind) && (rc == EOK))
-
-    {
-        /* collect value */
-        if ( _ansc_strlen(pConf->Frequency) >= *pUlSize )
-        {
-            *pUlSize = _ansc_strlen(pConf->Frequency);
-            return 1;
-        }
-        
-         rc = strcpy_s(pValue,*pUlSize , pConf->Frequency);
-         if(rc != EOK)
-         {
-             ERR_CHK(rc);
-             return -1;
-         }
-
-        return 0;
-    }
-
     rc = strcmp_s( "PowerLevel",strlen("PowerLevel"),ParamName, &ind);
     ERR_CHK(rc);
     if((!ind) && (rc == EOK))
