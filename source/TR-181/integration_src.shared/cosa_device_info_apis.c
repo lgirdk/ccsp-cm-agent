@@ -72,6 +72,7 @@
 #include <string.h>
 #include "cosa_device_info_apis.h"
 #include "cm_hal.h"
+#include "platform_hal.h"
 #include "cosa_device_info_internal.h"
 #include "safec_lib_common.h"
 
@@ -134,35 +135,14 @@ ANSC_STATUS CosaDmlDIGetDLFlag(ANSC_HANDLE hContext)
 
 ANSC_STATUS CosaDmlDIGetFWVersion(ANSC_HANDLE hContext)
 {
+	PCOSA_DATAMODEL_DEVICEINFO pMyObject = (PCOSA_DATAMODEL_DEVICEINFO) hContext;
 
-	PCOSA_DATAMODEL_DEVICEINFO      pMyObject    = (PCOSA_DATAMODEL_DEVICEINFO)hContext;
-	FILE *fp;
-	char buff[128]={0};
-	
-	if((fp = fopen("/version.txt", "r")) == NULL)
+	if (platform_hal_GetSoftwareVersion (pMyObject->Current_Firmware, sizeof(pMyObject->Current_Firmware)) != RETURN_OK)
 	{
-		CcspTraceError(("Error while opening the file version.txt \n"));
+		CcspTraceError(("platform_hal_GetSoftwareVersion() failed\n"));
 		return ANSC_STATUS_FAILURE;
 	}
 
-	while(fgets(buff, 128, fp) != NULL) 
-	{
-		if(strstr(buff, "imagename") != NULL) 
-		{
-			int i = 0;
-			while((buff[i+10] != '\n') && (buff[i+10] != '\r') && (buff[i+10] != '\0'))
-			{
-				pMyObject->Current_Firmware[i] = buff[i+10];
-				i++;
-			}
-			pMyObject->Current_Firmware[i] = '\0';
-			break;
-		}
-	}
-	
-	if(fp)
-		fclose(fp);
-	
 	CcspTraceInfo((" Current FW Version is %s \n", pMyObject->Current_Firmware));
 	return ANSC_STATUS_SUCCESS;
 }
