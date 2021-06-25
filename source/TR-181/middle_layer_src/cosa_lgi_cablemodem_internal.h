@@ -25,6 +25,12 @@
 #define  COSA_DATAMODEL_LGI_CABLEMODEM_CLASS_CONTENT    \
     /* duplication of the base object class content */ \
     COSA_BASE_CONTENT                                  \
+    uint32_t           OfdmChannelNumber;               \
+    cm_ds_ofdm_chan_t* pOfdmChannel;                    \
+    ULONG              OfdmChannelUpdateTime;           \
+    uint32_t           OfdmaChannelNumber;              \
+    cm_us_ofdma_chan_t* pOfdmaChannel;                   \
+    ULONG              OfdmaChannelUpdateTime;          \
     ULONG              UpstreamChannelNumber;          \
     PCOSA_CM_US_CHANNEL    pUpstreamChannel;           \
     ULONG              UpstreamChannelUpdateTime;      \
