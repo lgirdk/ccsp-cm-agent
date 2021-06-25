@@ -1710,6 +1710,246 @@
 					</object>
 				</objects>
 			</object>
+      <object>
+            <name>OfdmChannel</name>
+            <objectType>dynamicTable</objectType>
+            <maxInstance>128</maxInstance>
+            <functions>
+                <func_GetEntryCount>LgiOfdmChannel_GetEntryCount</func_GetEntryCount>
+                <func_GetEntry>LgiOfdmChannel_GetEntry</func_GetEntry>
+                <func_IsUpdated>LgiOfdmChannel_IsUpdated</func_IsUpdated>
+                <func_Synchronize>LgiOfdmChannel_Synchronize</func_Synchronize>
+                <func_GetParamUlongValue>LgiOfdmChannel_GetParamUlongValue</func_GetParamUlongValue>
+                <func_GetParamStringValue>LgiOfdmChannel_GetParamStringValue</func_GetParamStringValue>
+            </functions>
+            <parameters>
+                <parameter>
+                    <name>ChannelID</name>
+                    <description>
+                        CMTS ID of the channel.
+                    </description>
+                    <type>unsignedInt[:255]</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>ChannelWidth</name>
+                    <description>
+                        Channel width, in MHz
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>FftType</name>
+                    <description>
+                        Fast Fourier Transform type (4K, 8K)
+                    </description>
+                    <type>string: 4K(0),8K(1)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>FirstActiveSubcarrier</name>
+                    <description>
+                        First active subcarrier, in MHz
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>LastActiveSubcarrier</name>
+                    <description>
+                        Last active subcarrier, in MHz
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>NumActiveSubcarrier</name>
+                    <description>
+                        Number of active subcarriers
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>DataScAvgMer</name>
+                    <description>
+                        Data subcarriers average MER
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>PilotScAvgMer</name>
+                    <description>
+                        Pilot average MER
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>PlcScAvgMer</name>
+                    <description>
+                        PLC average MER
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>PowerLevel</name>
+                    <description>
+                        The received power level at the Cable Modem in dBmV, rounded to 1 decimal place.
+                    </description>
+                    <type>string(64)</type>
+                    <syntax>string</syntax>
+                </parameter>
+                <parameter>
+                    <name>LockStatus</name>
+                    <description>
+                        Whether downstream channels are locked.
+                    </description>
+                    <type>string: NotLocked(0),Locked(1)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>Correcteds</name>
+                    <description>
+                        Represents the codewords received with correctable errors from the CM on this channel.
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>Uncorrectables</name>
+                    <description>
+                        Represents the codewords received with uncorrectable errors from the CM on this channel.
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>Modulation</name>
+                    <description>
+                        The modulation used for the selected channel.
+                    </description>
+                    <type>string: EMPTY(0),ERR(1),QPSK(2),QAM16(4),QAM64(6),QAM128(7),QAM256(8),QAM512(9),QAM1024(10),QAM2048(11),QAM4096(12)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+            </parameters>
+        </object>
+        <!-- OFDMChannel -->
+        <object>
+            <name>OfdmaChannel</name>
+            <objectType>dynamicTable</objectType>
+            <maxInstance>128</maxInstance>
+            <functions>
+                <func_GetEntryCount>LgiOfdmaChannel_GetEntryCount</func_GetEntryCount>
+                <func_GetEntry>LgiOfdmaChannel_GetEntry</func_GetEntry>
+                <func_IsUpdated>LgiOfdmaChannel_IsUpdated</func_IsUpdated>
+                <func_Synchronize>LgiOfdmaChannel_Synchronize</func_Synchronize>
+                <func_GetParamUlongValue>LgiOfdmaChannel_GetParamUlongValue</func_GetParamUlongValue>
+                <func_GetParamStringValue>LgiOfdmaChannel_GetParamStringValue</func_GetParamStringValue>
+            </functions>
+            <parameters>
+                <parameter>
+                    <name>ChannelID</name>
+                    <description>
+                        CMTS ID of the channel.
+                    </description>
+                    <type>unsignedInt[:255]</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>ChannelWidth</name>
+                    <description>
+                        Channel width, in MHz
+                    </description>
+                    <type>string(64)</type>
+                    <syntax>string</syntax>
+                </parameter>
+                <parameter>
+                    <name>FftType</name>
+                    <description>
+                        Fast Fourier Transform type (2K, 4K)
+                    </description>
+                    <type>string: 2K(0),4K(1)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>FirstActiveSubcarrier</name>
+                    <description>
+                        First active subcarrier, in MHz
+                    </description>
+                    <type>string(64)</type>
+                    <syntax>string</syntax>
+                </parameter>
+                <parameter>
+                    <name>LastActiveSubcarrier</name>
+                    <description>
+                        Last active subcarrier, in MHz
+                    </description>
+                    <type>string(64)</type>
+                    <syntax>string</syntax>
+                </parameter>
+                <parameter>
+                    <name>NumActiveSubcarrier</name>
+                    <description>
+                        Number of active subcarriers
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>PowerLevel</name>
+                    <description>
+                        The received power level at the Cable Modem in dBmV, rounded to 1 decimal place.
+                    </description>
+                    <type>string(64)</type>
+                    <syntax>string</syntax>
+                </parameter>
+                <parameter>
+                    <name>LockStatus</name>
+                    <description>
+                        Whether upstream channels are locked.
+                    </description>
+                    <type>string: NotLocked(0),Locked(1)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>Modulation</name>
+                    <description>
+                        The modulation used for the selected channel.
+                    </description>
+                    <type>string: EMPTY(0),ERR(1),QPSK(2),QAM8(3),QAM16(4),QAM32(5),QAM64(6),QAM128(7),QAM256(8),QAM512(9),QAM1024(10),QAM2048(11),QAM4096(12)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>ChannelType</name>
+                    <description>
+                        Type of the logical upstream identified by the ChannelID as described in the CM-SP-MULPI specification.
+                    </description>
+                    <type>string: Invalid(0),OFDMA(1)</type>
+                    <syntax>uint32/mapped</syntax>
+                </parameter>
+                <parameter>
+                    <name>T3Timeouts</name>
+                    <description>
+                        Number of times T3 expired on this channel.
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+                <parameter>
+                    <name>T4Timeouts</name>
+                    <description>
+                        Number of times T4 expired on this channel.
+                    </description>
+                    <type>unsignedInt</type>
+                    <syntax>uint32</syntax>
+                </parameter>
+            </parameters>
+          </object>
+        <!-- OFDMAChannel -->          
 		</objects>
 	</object>
 
