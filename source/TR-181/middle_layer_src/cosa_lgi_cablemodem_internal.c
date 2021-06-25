@@ -140,6 +140,17 @@ CosaLgiCableModemRemove
 
     g_pLgiCM = NULL;
 
+    /* Remove necessary resource */
+    if ( NULL != pMyObject->pOfdmChannel )
+    {
+        AnscFreeMemory((ANSC_HANDLE)pMyObject->pOfdmChannel);
+    }
+
+    if ( NULL != pMyObject->pOfdmaChannel )
+    {
+        AnscFreeMemory((ANSC_HANDLE)pMyObject->pOfdmaChannel);
+    }
+
     if(NULL != pMyObject)
     {
         /* Remove self */
