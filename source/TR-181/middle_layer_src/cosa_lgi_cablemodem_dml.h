@@ -23,7 +23,7 @@
 
  APIs for Object:
 
-    CableModemInfo.
+    X_LGI-COM_CableModem.
 
     *  LgiCableModem_GetParamBoolValue
     *  LgiCableModem_GetParamIntValue
@@ -115,6 +115,93 @@ LgiCableModem_Rollback
         ANSC_HANDLE                 hInsContext
     );
 
+/* OFDM Service */
+ULONG
+LgiOfdmChannel_Synchronize
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+BOOL
+LgiOfdmChannel_IsUpdated
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ULONG
+LgiOfdmChannel_GetEntryCount
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ANSC_HANDLE
+LgiOfdmChannel_GetEntry
+    (
+        ANSC_HANDLE                 hInsContext,
+        ULONG                       nIndex,
+        ULONG*                      pInsNumber
+    );
+
+BOOL
+LgiOfdmChannel_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      pUlong
+    );
+
+ULONG
+LgiOfdmChannel_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+/* OFDMA Service */
+ULONG
+LgiOfdmaChannel_GetEntryCount
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ANSC_HANDLE
+LgiOfdmaChannel_GetEntry
+    (
+        ANSC_HANDLE                 hInsContext,
+        ULONG                       nIndex,
+        ULONG*                      pInsNumber
+    );
+
+BOOL
+LgiOfdmaChannel_IsUpdated
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+ULONG
+LgiOfdmaChannel_Synchronize
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+BOOL
+LgiOfdmaChannel_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
+ULONG
+LgiOfdmaChannel_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
 
 /* Upstream Service */
 ULONG
