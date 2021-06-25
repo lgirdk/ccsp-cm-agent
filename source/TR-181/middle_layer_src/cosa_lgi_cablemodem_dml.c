@@ -394,6 +394,414 @@ LgiCableModem_Rollback
 /***********************************************************************
  APIs for Object:
 
+    X_LGI-COM_CableModem.OfdmChannel.{i}.
+
+    *  LgiOfdmChannel_GetEntryCount
+    *  LgiOfdmChannel_GetEntry
+    *  LgiOfdmChannel_IsUpdated
+    *  LgiOfdmChannel_Synchronize
+    *  LgiOfdmChannel_GetParamUlongValue
+    *  LgiOfdmChannel_GetParamStringValue
+***********************************************************************/
+
+ULONG LgiOfdmChannel_GetEntryCount ( ANSC_HANDLE hInsContext )
+{
+    if (g_pLgiCM != NULL)
+    {
+        return g_pLgiCM->OfdmChannelNumber;
+    }
+
+    return 0;
+}
+
+ANSC_HANDLE LgiOfdmChannel_GetEntry ( ANSC_HANDLE hInsContext, ULONG nIndex, ULONG* pInsNumber )
+{
+    if (g_pLgiCM != NULL)
+    {
+        if (nIndex < g_pLgiCM->OfdmChannelNumber)
+        {
+            *pInsNumber  = nIndex + 1;
+            return &g_pLgiCM->pOfdmChannel[nIndex];
+        }
+    }
+
+    return NULL; /* return the handle */
+}
+
+BOOL LgiOfdmChannel_IsUpdated ( ANSC_HANDLE hInsContext )
+{
+    if (g_pLgiCM == NULL)
+    {
+        return FALSE;
+    }
+
+    if ( !g_pLgiCM->OfdmChannelUpdateTime )
+    {
+        g_pLgiCM->OfdmChannelUpdateTime = AnscGetTickInSeconds();
+
+        return TRUE;
+    }
+
+    if ( g_pLgiCM->OfdmChannelUpdateTime >= TIME_NO_NEGATIVE(AnscGetTickInSeconds() - CM_REFRESH_INTERVAL) )
+    {
+        return FALSE;
+    }
+    else
+    {
+        g_pLgiCM->OfdmChannelUpdateTime = AnscGetTickInSeconds();
+
+        return TRUE;
+    }
+}
+
+ULONG LgiOfdmChannel_Synchronize ( ANSC_HANDLE hInsContext )
+{
+    int ret = -1;
+     
+    if (g_pLgiCM == NULL)
+    {
+        return -1;
+    }
+
+    Ccsp_cm_clnt_lock();
+
+    if ( g_pLgiCM->pOfdmChannel )
+    {
+        AnscFreeMemory(g_pLgiCM->pOfdmChannel);
+        g_pLgiCM->pOfdmChannel = NULL;
+    }
+
+    ret = docsis_getDsOFDMChannelCount(&g_pLgiCM->OfdmChannelNumber);
+
+    if ((!ret) && (g_pLgiCM->OfdmChannelNumber > 0))
+    {
+        g_pLgiCM->pOfdmChannel = AnscAllocateMemory( sizeof(cm_ds_ofdm_chan_t) * g_pLgiCM->OfdmChannelNumber );
+    }
+
+    if (NULL != g_pLgiCM->pOfdmChannel)
+    {
+        ret = CosaDmlGiGetOFDMChannelDetails(g_pLgiCM->OfdmChannelNumber, g_pLgiCM->pOfdmChannel);
+        if ( ret )
+        {
+            AnscFreeMemory(g_pLgiCM->pOfdmChannel);
+            g_pLgiCM->pOfdmChannel = NULL;
+            g_pLgiCM->OfdmChannelNumber = 0;
+        }
+    }
+    
+    Ccsp_cm_clnt_unlock();
+
+    return 0;
+}
+
+BOOL LgiOfdmChannel_GetParamUlongValue ( ANSC_HANDLE hInsContext, char *ParamName, ULONG *puLong )
+{
+    cm_ds_ofdm_chan_t *pConf = (cm_ds_ofdm_chan_t *) hInsContext;
+
+    if (strcmp(ParamName, "ChannelID") == 0)
+    {
+        *puLong = pConf->channelID;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "ChannelWidth") == 0)
+    {
+        *puLong = pConf->channelWidth;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "NumActiveSubcarrier") == 0)
+    {
+        *puLong = pConf->numActSubcarrier;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "FirstActiveSubcarrier") == 0)
+    {
+        *puLong = pConf->firstActSubcarrier;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "LastActiveSubcarrier") == 0)
+    {
+        *puLong = pConf->lastActSubcarrier;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "PilotScAvgMer") == 0)
+    {
+        *puLong = pConf->pilotScAvgMer;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "PlcScAvgMer") == 0)
+    {
+        *puLong = pConf->plcScAvgMer;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "DataScAvgMer") == 0)
+    {
+        *puLong = pConf->dataScAvgMer;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "LockStatus") == 0)
+    {
+        *puLong = pConf->lockStatus;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "FftType") == 0)
+    {
+        *puLong = pConf->fftType;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "Modulation") == 0)
+    {
+        *puLong = pConf->modulation_high;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "Correcteds") == 0)
+    {
+        *puLong = pConf->correcteds;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "Uncorrectables") == 0)
+    {
+        *puLong = pConf->uncorrectables;
+        return TRUE;
+    }
+
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return FALSE;
+}
+
+static format_result_float (char *pValue, ULONG *pUlSize, float value)
+{
+    int len;
+    char pVal[32];
+
+    len = snprintf (pVal, sizeof(pVal), "%.1f", value);
+
+    if ( len >= *pUlSize )
+    {
+	*pUlSize = len + 1;
+	return 1;
+    }
+
+    memcpy (pValue, pVal, len + 1);
+
+    return 0;
+}
+
+ULONG LgiOfdmChannel_GetParamStringValue ( ANSC_HANDLE hInsContext, char* ParamName, char *pValue, ULONG *pUlSize )
+{
+    cm_ds_ofdm_chan_t *pConf = (cm_ds_ofdm_chan_t *) hInsContext;
+
+    if (strcmp(ParamName, "PowerLevel") == 0)
+    {
+        return format_result_float (pValue, pUlSize, pConf->power);
+    }
+
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return -1;
+}
+
+/***********************************************************************
+ APIs for Object:
+
+    X_LGI-COM_CableModem.OfdmaChannel.{i}.
+
+    *  LgiOfdmaChannel_GetEntryCount
+    *  LgiOfdmaChannel_GetEntry
+    *  LgiOfdmaChannel_IsUpdated
+    *  LgiOfdmaChannel_Synchronize
+    *  LgiOfdmaChannel_GetParamUlongValue
+    *  LgiOfdmaChannel_GetParamStringValue
+***********************************************************************/
+
+ULONG LgiOfdmaChannel_GetEntryCount ( ANSC_HANDLE hInsContext )
+{
+    if (g_pLgiCM != NULL)
+    {
+        return g_pLgiCM->OfdmaChannelNumber;
+    }
+
+    return 0;
+}
+
+ANSC_HANDLE LgiOfdmaChannel_GetEntry ( ANSC_HANDLE hInsContext, ULONG nIndex, ULONG* pInsNumber )
+{
+    if (g_pLgiCM != NULL)
+    {
+        if (nIndex < g_pLgiCM->OfdmaChannelNumber)
+        {
+            *pInsNumber  = nIndex + 1;
+            return &g_pLgiCM->pOfdmaChannel[nIndex];
+        }
+    }
+
+    return NULL; /* return the handle */
+}
+
+BOOL LgiOfdmaChannel_IsUpdated ( ANSC_HANDLE hInsContext )
+{
+    if (g_pLgiCM == NULL)
+    {
+        return FALSE;
+    }
+
+    if ( !g_pLgiCM->OfdmaChannelUpdateTime )
+    {
+        g_pLgiCM->OfdmaChannelUpdateTime = AnscGetTickInSeconds();
+
+        return TRUE;
+    }
+
+    if ( g_pLgiCM->OfdmaChannelUpdateTime >= TIME_NO_NEGATIVE(AnscGetTickInSeconds() - CM_REFRESH_INTERVAL) )
+    {
+        return FALSE;
+    }
+    else
+    {
+        g_pLgiCM->OfdmaChannelUpdateTime = AnscGetTickInSeconds();
+
+        return TRUE;
+    }
+}
+
+ULONG LgiOfdmaChannel_Synchronize ( ANSC_HANDLE hInsContext )
+{
+    int ret = -1;
+
+    if (g_pLgiCM == NULL)
+    {
+        return -1;
+    }
+
+    Ccsp_cm_clnt_lock();
+
+    if ( g_pLgiCM->pOfdmaChannel )
+    {
+        AnscFreeMemory(g_pLgiCM->pOfdmaChannel);
+        g_pLgiCM->pOfdmaChannel = NULL;
+    }
+
+    ret = docsis_getUsOFDMAChannelCount(&g_pLgiCM->OfdmaChannelNumber);
+
+    if ((!ret) && (g_pLgiCM->OfdmaChannelNumber > 0))
+    {
+        g_pLgiCM->pOfdmaChannel = AnscAllocateMemory( sizeof(cm_us_ofdma_chan_t) * g_pLgiCM->OfdmaChannelNumber );
+    }
+
+    if (NULL != g_pLgiCM->pOfdmaChannel)
+    {
+        ret = CosaDmlGiGetOFDMAChannelDetails(g_pLgiCM->OfdmaChannelNumber, g_pLgiCM->pOfdmaChannel);
+        if ( ret )
+        {
+            AnscFreeMemory(g_pLgiCM->pOfdmaChannel);
+            g_pLgiCM->pOfdmaChannel = NULL;
+            g_pLgiCM->OfdmaChannelNumber = 0;
+        }
+    }
+
+    Ccsp_cm_clnt_unlock();
+
+    return 0;
+}
+
+BOOL LgiOfdmaChannel_GetParamUlongValue ( ANSC_HANDLE hInsContext, char *ParamName, ULONG *puLong )
+{
+    cm_us_ofdma_chan_t *pConf = (cm_us_ofdma_chan_t *) hInsContext;
+
+    if (strcmp(ParamName, "ChannelID") == 0)
+    {
+        *puLong = pConf->channelID;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "ChannelType") == 0)
+    {
+        *puLong = pConf->channelType;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "NumActiveSubcarrier") == 0)
+    {
+        *puLong = pConf->numActSubcarrier;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "LockStatus") == 0)
+    {
+        /*LockStatus[]: {"FAIL", "RANGING", "SUCCESS", "RANGING" }*/
+        *puLong = (pConf->lockStatus == 2) ? 1 : 0;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "FftType") == 0)
+    {
+        *puLong = pConf->fftType;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "Modulation") == 0)
+    {
+        *puLong = pConf->modulation;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "T3Timeouts") == 0)
+    {
+        *puLong = pConf->t3Timeouts;
+        return TRUE;
+    }
+
+    if (strcmp(ParamName, "T4Timeouts") == 0)
+    {
+        *puLong = pConf->t4Timeouts;
+        return TRUE;
+    }
+
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return FALSE;
+}
+
+ULONG LgiOfdmaChannel_GetParamStringValue ( ANSC_HANDLE hInsContext, char* ParamName, char *pValue, ULONG *pUlSize )
+{
+    cm_us_ofdma_chan_t *pConf = (cm_us_ofdma_chan_t *) hInsContext;
+
+    if (strcmp(ParamName, "PowerLevel") == 0)
+    {
+        return format_result_float (pValue, pUlSize, pConf->power);
+    }
+
+    if (strcmp(ParamName, "FirstActiveSubcarrier") == 0)
+    {
+        return format_result_float (pValue, pUlSize, pConf->freqMIN);
+    }
+
+    if (strcmp(ParamName, "LastActiveSubcarrier") == 0)
+    {
+        return format_result_float (pValue, pUlSize, pConf->freqMAX);
+    }
+
+    if (strcmp(ParamName, "ChannelWidth") == 0)
+    {
+        return format_result_float (pValue, pUlSize, pConf->channelWidth);
+    }
+
+    /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
+    return -1;
+}
+
+/***********************************************************************
+ APIs for Object:
+
     X_LGI-COM_CableModem.QosServiceFlow.Upstream{i}.
     *  Lgi_US_QosServiceFlow_IsUpdated
     *  Lgi_US_QosServiceFlow_Synchronize

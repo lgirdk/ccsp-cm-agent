@@ -18,6 +18,7 @@
 #define  _COSA_LGI_CABLEMODEM_APIS_H
 
 #include "../middle_layer_src/cosa_apis.h"
+#include "cm_hal.h"
 
 #define DOWNSTREAM_INDEX 1
 #define UPSTREAM_INDEX   2
@@ -136,6 +137,20 @@ CosaDmlGiGetLgiDownstreamPrimaryChannelID
 (
     ANSC_HANDLE                 hContext,
     ULONG                       *pValue
+);
+
+ANSC_STATUS
+CosaDmlGiGetOFDMChannelDetails
+(
+    uint32_t                    ds_ofdm_count,
+    cm_ds_ofdm_chan_t           *ofdmChan
+);
+
+ANSC_STATUS
+CosaDmlGiGetOFDMAChannelDetails
+(
+    uint32_t                   us_ofdma_count,
+    cm_us_ofdma_chan_t         *ofdmaChan  
 );
 #endif
 
