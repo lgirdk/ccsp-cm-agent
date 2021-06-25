@@ -421,3 +421,51 @@ CosaDmlGiGetT2Timeouts
     return ANSC_STATUS_SUCCESS;
 }
 
+/**************************************************************************/
+/*! \fn ANSC_STATUS CosaDmlGiGetOFDMChannelDetails(uint32_t ds_ofdm_count,
+        cm_ds_ofdm_chan_t *ofdmChan)
+ **************************************************************************
+ *  \brief get ODFM Channel Details
+ *  \param[in] ds_ofdm_count
+ *  \param[in] ofdmChan
+ *  \param[out] ofdmChan
+ *  \return STATUS
+ **************************************************************************/
+ANSC_STATUS CosaDmlGiGetOFDMChannelDetails (uint32_t ds_ofdm_count, cm_ds_ofdm_chan_t *ofdmChan)
+{
+    int st;
+
+    if ( ds_ofdm_count <= 0 || ofdmChan == NULL )
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+
+    st = docsis_getDsOFDMChannelDetails (ds_ofdm_count, ofdmChan);
+
+    return (st == RETURN_OK) ? ANSC_STATUS_SUCCESS : ANSC_STATUS_FAILURE;
+}
+
+/**************************************************************************/
+/*! \fn ANSC_STATUS CosaDmlGiGetOFDMAChannelDetails(uint32_t us_ofdma_count,
+        cm_us_ofdma_chan_t *ofdmaChan)
+ **************************************************************************
+ *  \brief get ODFM Channel Details
+ *  \param[in] us_ofdma_count
+ *  \param[in] ofdmaChan
+ *  \param[out] ofdmaChan
+ *  \return STATUS
+ **************************************************************************/
+ANSC_STATUS CosaDmlGiGetOFDMAChannelDetails (uint32_t us_ofdma_count, cm_us_ofdma_chan_t *ofdmaChan)
+{
+    int st;
+
+    if ( us_ofdma_count <= 0 || ofdmaChan == NULL )
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+
+    st = docsis_getUsOFDMAChannelDetails (us_ofdma_count, ofdmaChan);
+
+    return (st == RETURN_OK) ? ANSC_STATUS_SUCCESS : ANSC_STATUS_FAILURE;
+}
+
