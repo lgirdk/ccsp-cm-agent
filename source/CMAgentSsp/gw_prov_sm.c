@@ -1684,7 +1684,12 @@ void GWP_UpdateERouterMode(void)
     int timeout = 0;
     if (oldRouterMode != eRouterMode)
     {
-           
+        if(oldRouterMode == 2)
+        {
+	      syscfg_set(NULL, "dslite_enable", "false") ;
+	      syscfg_set(NULL, "dslite_active_1", "false") ;
+        }
+        
         if (eRouterMode == DOCESAFE_ENABLE_DISABLE_extIf)
         {
             // This means we are switching from router mode to bridge mode, set bridge_mode
