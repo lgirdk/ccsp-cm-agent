@@ -28,6 +28,7 @@
 
 #include <ccsp_base_api.h>
 #include <custom_alias_utils.h>
+#include <syscfg/syscfg.h>
 #include <ansc_platform.h>
 
 #include "gw_prov_sm.h"
@@ -439,6 +440,17 @@ int GWP_act_ErouterSnmpInitModeSet_callback(void)
         // Below event reboot-triggered is to avoid resetting of wireless radios during CM reboot.
         system("sysevent set reboot-triggered 1");
         GWP_UpdateERouterMode();
+
+        if (syscfg_set(NULL, "X_RDKCENTRAL-COM_LastRebootReason", "Erouter Mode Change") != 0)
+        {
+            GWPROV_PRINT(("RDKB_REBOOT : RebootDevice syscfg_set failed erouter mode change\n"));
+        }
+
+        if (syscfg_set_commit(NULL, "X_RDKCENTRAL-COM_LastRebootCounter", "1") != 0)
+        {
+            GWPROV_PRINT(("syscfg_set failed\n"));
+        }
+
         sleep(5);
         system("reboot"); // Reboot on change of device mode.
     }
