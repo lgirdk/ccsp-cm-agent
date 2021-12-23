@@ -949,7 +949,6 @@ int main(int argc, char* argv[])
     PCD_api_register_exception_handlers( argv[0], NULL );
 #endif
 
-    syscfg_init();
 #ifdef ENABLE_RDK_WANMANAGER
      if ( 0 != access( "/nvram/ETHWAN_ENABLE" , F_OK ) )
      {
