@@ -2938,7 +2938,6 @@ static void GWP_act_ProvEntry_callback()
     registerDocsisInitEvents();
 #endif
 
-    syscfg_init();
     if (0 != GWP_SysCfgGetInt("bridge_mode"))
     {
         bridgeModeInBootup = 1;
@@ -2958,8 +2957,6 @@ static void GWP_act_ProvEntry_callback()
     v_secure_system("mkdir -p /var/run/firewall");
 
     v_secure_system("/etc/utopia/utopia_init.sh");
-
-    syscfg_init();
 
     sleep(2);
 
