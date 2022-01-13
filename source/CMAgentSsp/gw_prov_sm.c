@@ -3129,11 +3129,8 @@ static void GWP_act_DocsisTftpOk_callback(){
 #endif
 
 #if !defined(INTEL_PUMA7)
-static void LAN_start() {
-#ifdef RDKB_DSLITE
-    char _4_to_6_status[2]={0};
-    int dslite_enable=0;
-#endif
+static void LAN_start (void)
+{
     int ret = 0;
     CcspTraceInfo((" Entry %s \n", __FUNCTION__));
 
@@ -3162,15 +3159,16 @@ static void LAN_start() {
     }
 
     CcspTraceInfo(("\n***********************************return sysevent value %d\n",ret));
-    
-#ifdef RDKB_DSLITE
-/* Check if 4_to_6 tunnel support is enabled */
-    syscfg_get(NULL, "4_to_6_enabled", _4_to_6_status, sizeof(_4_to_6_status));
-    dslite_enable = atoi(_4_to_6_status);
-    if (dslite_enable == 1)
+
+#ifdef DSLITE_FEATURE_SUPPORT
     {
-        CcspTraceInfo((" Setting dslite_enabled event \n"));
-        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dslite_enabled", "1", 0);
+        char buf[2];
+
+        if ((syscfg_get(NULL, "4_to_6_enabled", buf, sizeof(buf)) == 0) && (strcmp(buf, "1") == 0))
+        {
+            CcspTraceInfo((" Setting dslite_enabled event \n"));
+            sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dslite_enabled", "1", 0);
+        }
     }
 #endif
 
