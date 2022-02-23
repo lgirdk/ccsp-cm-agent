@@ -164,8 +164,6 @@ CosaDmlRDKCentralCmGetDownstreamChannel
         {
            return ANSC_STATUS_FAILURE;
         }
-	rc = memset_s( *ppDsOfdmChannel,sizeof(COSA_X_RDKCENTRAL_COM_CM_DS_OFDM_CHAN) * output_NumberOfEntries, 0, sizeof(COSA_X_RDKCENTRAL_COM_CM_DS_OFDM_CHAN) * output_NumberOfEntries );
-        ERR_CHK(rc);
 
 		pDsOfdmChannel = (PCOSA_X_RDKCENTRAL_COM_CM_DS_OFDM_CHAN)ppDsOfdmChannel[0];
 
@@ -259,8 +257,6 @@ CosaDmlRDKCentralCmGetUpstreamChannel
                     return ANSC_STATUS_FAILURE;
                 }
 
-	      rc = memset_s( *ppUsOfdmChannel,sizeof(COSA_X_RDKCENTRAL_COM_CM_US_OFDMA_CHAN) * output_NumberOfEntries, 0, sizeof(COSA_X_RDKCENTRAL_COM_CM_US_OFDMA_CHAN) * output_NumberOfEntries );
-              ERR_CHK(rc);
 
 		pUsOfdmChannel = (PCOSA_X_RDKCENTRAL_COM_CM_US_OFDMA_CHAN)ppUsOfdmChannel[0];
 
@@ -345,8 +341,7 @@ CosaDmlRDKCentralCmGetCMStatusofUpstreamChannel
               {
                  return ANSC_STATUS_FAILURE;
               }
-	      rc = memset_s( *ppCMStatusofUsChannel,sizeof(COSA_X_RDKCENTRAL_COM_CMSTATUSOFDMA_US) * output_NumberOfEntries, 0, sizeof(COSA_X_RDKCENTRAL_COM_CMSTATUSOFDMA_US) * output_NumberOfEntries );
-              ERR_CHK(rc);
+
 		pCMStatusofUsChannel = (PCOSA_X_RDKCENTRAL_COM_CMSTATUSOFDMA_US)ppCMStatusofUsChannel[0];
 
 		for( iLoopCount = 0; iLoopCount < output_NumberOfEntries; ++iLoopCount )
