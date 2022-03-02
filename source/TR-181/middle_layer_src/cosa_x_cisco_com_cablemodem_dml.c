@@ -72,6 +72,7 @@
 #include "cosa_x_cisco_com_cablemodem_dml.h"
 #include "cosa_x_cisco_com_cablemodem_internal.h"
 #include "safec_lib_common.h"
+#include <syscfg/syscfg.h>
 
 static int g_DocsisLog_clean_flg=0;  
 /***********************************************************************
@@ -672,7 +673,20 @@ X_CISCO_COM_CableModem_GetParamStringValue
     ERR_CHK(rc);
     if((!ind) && (rc == EOK))
     {
-        /* collect value */
+#if defined (_CM_MAC_SYSCFG_CACHE_)
+        if (syscfg_get(NULL, "cm_mac", pValue, *pUlSize) == 0)
+        {
+            int i;
+            for (i = 0; i < *pUlSize; i++) {
+                if (pValue[i] == 0)
+                    break;
+                if ((pValue[i] >= 'a') && (pValue[i] <= 'f'))
+                    pValue[i] -= ('a' - 'A');
+            }
+            return 0;
+        }
+#endif
+
         if (CosaDmlCMGetDHCPInfo(NULL, &Info) != ANSC_STATUS_SUCCESS)
             return -1;
 
@@ -683,6 +697,9 @@ X_CISCO_COM_CableModem_GetParamStringValue
            return -1;
         }
         
+#if defined (_CM_MAC_SYSCFG_CACHE_)
+        syscfg_set(NULL, "cm_mac", pValue);
+#endif
 
         return 0;
     }
