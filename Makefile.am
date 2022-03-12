@@ -21,9 +21,6 @@ SUBDIRS = source
 lib_LTLIBRARIES = libcm_tr181.la
 
 libcm_tr181_la_CPPFLAGS = \
-    -D_ANSC_LINUX \
-    -D_ANSC_USER \
-    -D_ANSC_LITTLE_ENDIAN_ \
     -I$(top_srcdir)/source/TR-181/board_sbapi \
     -I$(top_srcdir)/source/TR-181/middle_layer_src \
     -I$(top_srcdir)/source/TR-181/include \
