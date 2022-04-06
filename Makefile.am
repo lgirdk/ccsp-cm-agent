@@ -29,7 +29,7 @@ libcm_tr181_la_CPPFLAGS = \
     -I$(top_srcdir)/source/TR-181/include \
     -I$(top_srcdir)/source/Custom
 
-libcm_tr181_la_LDFLAGS =
+libcm_tr181_la_LDFLAGS = -lsyscfg
 libcm_tr181_la_SOURCES =
 libcm_tr181_la_DEPENDENCIES = \
 	source/TR-181/middle_layer_src/libCcspCMAgent_middle_layer_src.la \
