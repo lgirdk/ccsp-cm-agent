@@ -2325,6 +2325,7 @@ static void *GWP_sysevent_threadfunc(void *data)
         char brlan0_inst[BRG_INST_SIZE] = {0};
         char brlan1_inst[BRG_INST_SIZE] = {0};
         char* l3net_inst = NULL;
+        char buf[256];
 #endif
         err = sysevent_getnotification(sysevent_fd, sysevent_token, name, &namelen,  val, &vallen, &getnotification_asyncid);
 
@@ -2509,7 +2510,30 @@ static void *GWP_sysevent_threadfunc(void *data)
 #endif
 
                         // trigger multinet start
-                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET3_INSTANCE, 0);
+                        bool guest_enable = true;
+#ifdef _COSA_BCM_ARM_
+                        // Disable guest network interface if w10.3 and w11.3 are false (0)
+                        buf[0] = '\0';
+                        GWP_Util_get_shell_output("nvram get wl0.3_bss_enabled", buf, sizeof(buf));
+                        if (strcmp(buf, "0") == 0)
+                        {
+                            buf[0] = '\0';
+                            GWP_Util_get_shell_output("nvram get wl1.3_bss_enabled", buf, sizeof(buf));
+                            if (strcmp(buf, "0") == 0)
+                            {
+                                guest_enable = false;
+                            }
+                        }
+#endif
+                        if (!guest_enable)
+                        {
+                            CcspTraceInfo(("%s Skip enabling guest network interface brlan7 during bootup \n", __FUNCTION__));
+                        }
+                        else
+                        {
+                            CcspTraceInfo(("%s Enable guest network interface brlan7 \n", __FUNCTION__));
+                            sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET3_INSTANCE, 0);
+                        }
 #ifdef _PUMA6_ARM_
                         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET4_INSTANCE, 0);
                         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET5_INSTANCE, 0);
@@ -2521,7 +2545,6 @@ static void *GWP_sysevent_threadfunc(void *data)
 #endif
                     }
 #ifdef MULTILAN_FEATURE
-        char buf[256];
         sysevent_get(sysevent_fd_gs, sysevent_token_gs, "primary_lan_l3net", brlan0_inst, sizeof(brlan0_inst));
         sysevent_get(sysevent_fd_gs, sysevent_token_gs, "homesecurity_lan_l3net", brlan1_inst, sizeof(brlan1_inst));
         /*Get the active bridge instances and bring up the bridges */
