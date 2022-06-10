@@ -782,7 +782,22 @@ CosaDmlCMGetDHCPInfo
 {
     UNREFERENCED_PARAMETER(hContext);
     if (cm_hal_GetDHCPInfo((PCMMGMT_CM_DHCP_INFO)pInfo) == RETURN_OK)
+    {
+        int i;
+
+        /*
+           The HAL should return pInfo->MACAddress with hex chars in upper case
+           however some HAL implementations may not do that so convert here too.
+        */
+        for (i = 0; i < sizeof(pInfo->MACAddress); i++) {
+            if (pInfo->MACAddress[i] == 0)
+                break;
+            if ((pInfo->MACAddress[i] >= 'a') && (pInfo->MACAddress[i] <= 'f'))
+                pInfo->MACAddress[i] -= ('a' - 'A');
+        }
+
         return ANSC_STATUS_SUCCESS;
+    }
     else 
         return ANSC_STATUS_FAILURE;
 }
