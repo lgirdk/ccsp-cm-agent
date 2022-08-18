@@ -285,6 +285,14 @@ LgiCableModem_GetParamUlongValue
         }
         return TRUE;
     }
+    if (strcmp(ParamName, "DownstreamPrimaryChannelType") == 0)
+    {
+        if(CosaDmlGiGetLgiDownstreamPrimaryChannelType(NULL,puLong) != ANSC_STATUS_SUCCESS)
+        {
+            *puLong = 0;
+        }
+        return TRUE;
+    }
     /* CcspTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
     return FALSE;
 }
