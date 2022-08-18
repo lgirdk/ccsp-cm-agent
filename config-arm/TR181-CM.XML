@@ -1553,6 +1553,15 @@
 		<type>unsignedInt[:255]</type>
 		<syntax>uint32</syntax>
 		</parameter>
+        
+		<parameter>
+		<name>DownstreamPrimaryChannelType</name>
+		<description>Channel Type of the primary downstream channel</description>
+		<type>string: SC-QAM(0),OFDM(1)</type>
+		<syntax>uint32/mapped</syntax>
+		<writable>false</writable>
+		</parameter>
+        
 	</parameters>
 	<objects>
 		<object>
