@@ -395,6 +395,33 @@ CosaDmlGiGetLgiDownstreamPrimaryChannelID
 }
 
 /**************************************************************************/
+/*! \fn ANSC_STATUS CosaDmlGiGetLgiDownstreamPrimaryChannelType(ANSC_HANDLE hContext,
+        ULONG *pValue)
+ **************************************************************************
+ *  \brief get downstream primary channel Type
+ *  \param[in] hContext
+ *  \param[out] pValue
+ *  \return STATUS
+ **************************************************************************/
+ANSC_STATUS
+CosaDmlGiGetLgiDownstreamPrimaryChannelType
+    (
+        ANSC_HANDLE                 hContext,
+        ULONG                       *pValue
+    )
+{
+    int downstreamPriChannelType = 0;
+    if ((pValue == NULL) || (docsis_getDownstreamPrimaryChannelType(&downstreamPriChannelType) != RETURN_OK))
+    {
+        AnscTraceWarning(("Processing failed  %s, %d\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
+    }
+    *pValue = (ULONG)downstreamPriChannelType;
+    return ANSC_STATUS_SUCCESS;
+}
+
+
+/**************************************************************************/
 /*! \fn ANSC_STATUS CosaDmlGiGetT2Timeouts(ANSC_HANDLE hContext,
         ULONG *pValue)
  **************************************************************************
