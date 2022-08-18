@@ -140,6 +140,13 @@ CosaDmlGiGetLgiDownstreamPrimaryChannelID
 );
 
 ANSC_STATUS
+CosaDmlGiGetLgiDownstreamPrimaryChannelType
+(
+    ANSC_HANDLE                 hContext,
+    ULONG                       *pValue
+);
+
+ANSC_STATUS
 CosaDmlGiGetOFDMChannelDetails
 (
     uint32_t                    ds_ofdm_count,
