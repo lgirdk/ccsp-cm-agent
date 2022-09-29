@@ -334,25 +334,20 @@ CosaDmlCMWanUpdateCustomConfig
         BOOL             bValue
     )
 {
-    char command[256] = {0};
+    char command[256];
+
     if (bValue == TRUE)
     {
-       memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"ip addr flush dev %s",DOCSIS_INF_NAME);
         system(command);
-        memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"ip -6 addr flush dev %s",DOCSIS_INF_NAME);
         system(command);
-        memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"sysctl -w net.ipv6.conf.%s.accept_ra=0",DOCSIS_INF_NAME);
         system(command);
-        memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"sysctl -w net.ipv6.conf.%s.disable_ipv6=1",DOCSIS_INF_NAME);
         system(command); 
-        memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"ip link set %s up",DOCSIS_INF_NAME);
         system(command);
-        memset(command,0,sizeof(command));
         snprintf(command,sizeof(command),"brctl addif %s %s",WAN_PHY_NAME,DOCSIS_INF_NAME);
         system(command);
     }
@@ -362,7 +357,6 @@ CosaDmlCMWanUpdateCustomConfig
 #ifdef _COSA_BCM_ARM_
         INT bridge_mode = 0;
         char buf[64];
-         memset(buf,0,sizeof(buf));
         if (syscfg_get(NULL, "bridge_mode", buf, sizeof(buf)) == 0)
         {
             bridge_mode = atoi(buf);
@@ -370,7 +364,6 @@ CosaDmlCMWanUpdateCustomConfig
         if (bridge_mode == 0)
 #endif
         {
-            memset(command,0,sizeof(command));
             snprintf(command,sizeof(command),"brctl delif %s %s",WAN_PHY_NAME,DOCSIS_INF_NAME);
             system(command);
         }
@@ -391,8 +384,7 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
         INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
         BOOLEAN rfStatus = FALSE;
         char acSetParamName[256];
-        char acSetParamValue[128];
-        char buf[64];
+        char *acSetParamValue;
         ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
         if (pWanCfg)
         {
@@ -416,8 +408,9 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
                 {
                     if (rfStatus == TRUE)
                     {
+                        char buf[64];
                         INT lastKnownWanMode = WAN_MODE_DOCSIS;
-                        memset(buf,0,sizeof(buf));
+
                         if (syscfg_get(NULL, "last_wan_mode", buf, sizeof(buf)) == 0)
                         {
                             lastKnownWanMode = atoi(buf);
@@ -449,18 +442,9 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
                 counter += MONITOR_PHY_STATUS_QUERY_INTERVAL;
 
             }
-            memset(acSetParamName, 0, sizeof(acSetParamName));
-            snprintf(acSetParamName, sizeof(acSetParamName), WAN_PHY_STATUS_PARAM_NAME, iWanInstanceNumber);
-            memset(acSetParamValue, 0, sizeof(acSetParamValue));
-            if (TRUE == rfStatus)
-            {
-                snprintf(acSetParamValue, sizeof(acSetParamValue), "Up");
 
-            }
-            else
-            {
-                snprintf(acSetParamValue, sizeof(acSetParamValue), "Down");
-            }
+            snprintf(acSetParamName, sizeof(acSetParamName), WAN_PHY_STATUS_PARAM_NAME, iWanInstanceNumber);
+            acSetParamValue = (rfStatus == TRUE) ? "Up" : "Down";
             CcspTraceInfo(("%s-%d Param set %s\n",__FUNCTION__,__LINE__,acSetParamName));
             counter = 0;
             do
@@ -491,7 +475,7 @@ void* ThreadMonitorOperStatusAndNotify(void *args)
         BOOL isOperational = FALSE;
         INT counter = 0;
         INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
-        char acSetParamValue[128];
+        char *acSetParamValue;
         ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
         if (pWanCfg)
         {
@@ -524,18 +508,9 @@ void* ThreadMonitorOperStatusAndNotify(void *args)
                 sleep(MONITOR_OPER_STATUS_QUERY_INTERVAL);
                 counter += MONITOR_OPER_STATUS_QUERY_INTERVAL;
             }
-            memset(acSetParamName, 0, sizeof(acSetParamName));
-            snprintf(acSetParamName, sizeof(acSetParamName), WAN_OPER_STATUS_PARAM_NAME, iWanInstanceNumber);
 
-            memset(acSetParamValue, 0, sizeof(acSetParamValue));
-            if (isOperational == TRUE)
-            {
-                snprintf(acSetParamValue, sizeof(acSetParamValue), "Operational");
-            }
-            else
-            {
-                snprintf(acSetParamValue, sizeof(acSetParamValue), "NotOperational");
-            }
+            snprintf(acSetParamName, sizeof(acSetParamName), WAN_OPER_STATUS_PARAM_NAME, iWanInstanceNumber);
+            acSetParamValue = (isOperational == TRUE) ? "Operational" : "NotOperational";
             CcspTraceInfo(("%s-%d Param set %s\n",__FUNCTION__,__LINE__,acSetParamName));
             counter = 0;
             do
@@ -566,8 +541,6 @@ void* ThreadUpdateInformMsg(void *args)
         {
             INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
             BOOL bEthWanEnable = FALSE;
-            CHAR wanName[64];
-            CHAR out_value[64];
             CHAR acSetParamName[256];
             ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
 
@@ -581,21 +554,6 @@ void* ThreadUpdateInformMsg(void *args)
                 bEthWanEnable = TRUE;
             }
 
-            memset(out_value,0,sizeof(out_value));
-            memset(wanName,0,sizeof(wanName));
-            syscfg_get(NULL, "wan_physical_ifname", out_value, sizeof(out_value));
-
-            if(0 != strnlen(out_value,sizeof(out_value)))
-            {
-                snprintf(wanName, sizeof(wanName), "%s", out_value);
-            }
-            else
-            {
-                snprintf(wanName, sizeof(wanName), "%s", WAN_PHY_NAME);
-            }
-
-
-            memset(acSetParamName, 0, sizeof(acSetParamName));
             snprintf(acSetParamName, sizeof(acSetParamName), WAN_INTERFACE_PARAM_NAME, iWanInstanceNumber);
 
             if (bEthWanEnable == TRUE)
@@ -604,6 +562,15 @@ void* ThreadUpdateInformMsg(void *args)
             }
             else
             {
+                CHAR wanName[64];
+
+                syscfg_get(NULL, "wan_physical_ifname", wanName, sizeof(wanName));
+
+                if (strlen(wanName) == 0)
+                {
+                    snprintf(wanName, sizeof(wanName), "%s", WAN_PHY_NAME);
+                }
+
                 retval = SetParamValues(WAN_COMPONENT_NAME, WAN_DBUS_PATH, acSetParamName, wanName,ccsp_string,TRUE);
             }
             if (retval != ANSC_STATUS_SUCCESS)
