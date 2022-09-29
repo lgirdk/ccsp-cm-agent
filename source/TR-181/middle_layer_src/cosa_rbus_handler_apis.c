@@ -430,7 +430,7 @@ Rbus_CMAgent_SetParamBoolValue
     )
 {
 	UNREFERENCED_PARAMETER(hInsContext);
-	if (AnscEqualString(pParamName, "LinkDown", TRUE))
+	if (strcmp(pParamName, "LinkDown") == 0)
 	{
 		if(cmAgent_Link_Status.DocsisLinkDown!=bValue)
 		{
@@ -470,7 +470,7 @@ Rbus_CMAgent_SetParamUintValue
     )
 {
 	UNREFERENCED_PARAMETER(hInsContext); 
-	if (AnscEqualString(pParamName, "LinkDownTimeout", TRUE))
+	if (strcmp(pParamName, "LinkDownTimeout") == 0)
 	{
 	 	if(cmAgent_Link_Status.DocsisLinkDownTimeOut!=uValue)
 		{ 
