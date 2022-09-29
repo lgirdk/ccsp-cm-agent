@@ -306,7 +306,7 @@ ANSC_STATUS CosaDmlDIGetImage(ANSC_HANDLE hContext)
     //On Factory reset Syscfg values will be empty. So sync fw_to_upgrade with current image version
     if(syscfg_get(NULL,"X_RDKCENTRAL-COM_LastRebootReason",Last_reboot_reason,14) == 0)
     {
-        if( AnscEqualString(Last_reboot_reason, "factory-reset", TRUE))
+        if (strcmp(Last_reboot_reason, "factory-reset") == 0)
         {
             rc = strcpy_s(pMyObject->Firmware_To_Download,128, pMyObject->Current_Firmware);
             if(rc != EOK)
