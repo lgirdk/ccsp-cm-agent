@@ -62,7 +62,7 @@
 #define GW_SUBTLV_TR069_CONNREQ_USERNAME_EXTIF            5
 #define GW_SUBTLV_TR069_CONNREQ_PASSWORD_EXTIF            6
 #define GW_SUBTLV_TR069_ACS_OVERRIDE_EXTIF                7
-#if defined(_PLATFORM_RASPBERRYPI_) || defined(_COSA_BCM_ARM_)
+
 typedef enum Status
 {
     OK = 0,
@@ -70,13 +70,19 @@ typedef enum Status
     STATUS_OK = OK,
     STATUS_NOK = NOK,
 } STATUS;
+
 #define MAC_ADDR_LEN    6
 
 typedef struct mac_addr
 {
     unsigned char hw[ MAC_ADDR_LEN ];
 } macaddr_t;
-#endif
+
+/* Vendor Specific (TLV 43) sub-TLVs Tree */
+#define GW_SUBTLV_VENDOR_SPECIFIC_DATAMODEL_OBJECT        12
+
+/* Data Model Object (TLV 43.12) related defines */
+#define GW_SUBTLV_VENDOR_SPECIFIC_DATAMODEL_OBJECT_MAX_LEN 256
 
 /*! \var typedef enum DOCSIS_Esafe_Db_extIf_e
     \brief Type of enable.
@@ -125,6 +131,21 @@ typedef enum
 
     DOCESAFE_EROUTER_NUM_OPER_MODES_extIf,
 } esafeErouterOperModeExtIf_e;
+
+/*! \var typedef enum esafeErouterInitModeExtIf_e
+    \brief eRouter init mode
+*\n            The internal definitions match the MIB requirements.
+*\n            Needs to be in sync with the enum defined for DOCSIS ESAFE DB.
+*/
+typedef enum
+{
+    DOCESAFE_EROUTER_INIT_MODE_DISABLED_extIf   = 1,
+    DOCESAFE_EROUTER_INIT_MODE_IPV4_extIf       = 2,
+    DOCESAFE_EROUTER_INIT_MODE_IPV6_extIf       = 3,
+    DOCESAFE_EROUTER_INIT_MODE_IPV4_IPV6_extIf  = 4,
+    DOCESAFE_EROUTER_INIT_MODE_HONOR_ROUTER_INIT_extIf = 5,
+    DOCESAFE_EROUTER_NUM_INIT_MODES_extIf,
+} esafeErouterInitModeExtIf_e;
 
 /*! \enum esafeProvisioningStatusProgressExtIf_e
  *  \brief The current state of the eSAFE provisioning process
@@ -192,19 +213,21 @@ typedef enum TlvParseCallbackStatusExtIf
 * from provisioning abstraction layer when any provisioning
 * event occurs.
 */
-typedef void (*fpDocsisLinkDown_1)();
-typedef void (*fpDocsisLinkDown_2)();
+typedef int (*fpDocsisLinkDown_1)();
+typedef int (*fpDocsisLinkDown_2)();
 typedef int (*fpDocsisLinkUp)();
-typedef void (*fpDocsisCfgfile)(char*);
-typedef void (*fpDocsisTftpOk)();
-typedef void (*fpBefCfgfileEntry)();
-typedef void (*fpDocsisInited)();
-typedef void (*fpProvEntry)();
+typedef int (*fpDocsisCfgfile)(char*);
+typedef int (*fpDocsisTftpOk)();
+typedef int (*fpBefCfgfileEntry)();
+typedef int (*fpDocsisInited)();
+typedef int (*fpProvEntry)();
 typedef void (*fpDocsisEnabled)(unsigned char);
 #if defined(INTEL_PUMA7)
 typedef void (*fpDocsisRATransInterval)(unsigned short);
 #endif
-typedef void (*fpGW_Tr069PaSubTLVParse)(unsigned char type, unsigned short length, const unsigned char *value);
+typedef TlvParseCallbackStatusExtIf_e (*fpGW_Tr069PaSubTLVParse)(unsigned char type, unsigned short length, const unsigned char *value);
+typedef void (*fpErouterSnmpInitModeSet)();
+typedef void (*fpVendorSpecificSubTLVParse)(unsigned char type, unsigned short length, const unsigned char *value);
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
 typedef void (*fpGW_SetTopologyMode)(unsigned char type, unsigned short length, const unsigned char *value);
 #endif
@@ -230,6 +253,8 @@ typedef struct __appCallBack
 #if defined (CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION)
 	fpGW_SetTopologyMode pGW_SetTopologyMode;
 #endif
+	fpErouterSnmpInitModeSet pGWP_act_ErouterSnmpInitModeSet;
+	fpVendorSpecificSubTLVParse pGW_VendorSpecificSubTLVParse;
 }appCallBack;
 
  /*
@@ -650,12 +675,12 @@ int parseTlv(unsigned char *confFileBuff, unsigned int confFileBuffLen);
 * @brief This API is called to send all TR69 SNMP TLV11 configuration to 
 *	 SNMP agent
 *\n Prototype :
-        static STATUS sendTLV11toSnmpAgent
+        STATUS sendTLV11toSnmpAgent
 	(
 		void * Snmp_Tlv11Buf, 
 		int Snmp_Tlv11BufLen
 	)
-*\n Caller : static STATUS GW_UpdateTr069Cfg(void).
+*\n Caller : STATUS GW_UpdateTr069Cfg(void).
 *
 *
 * @param[in] void * Snmp_Tlv11Buf : SNMP TLV's data buffer.
@@ -663,9 +688,7 @@ int parseTlv(unsigned char *confFileBuff, unsigned int confFileBuffLen);
 * @param[out] None.
 * @retval STATUS
 */
-#if 0
-static STATUS sendTLV11toSnmpAgent(void * Snmp_Tlv11Buf, int Snmp_Tlv11BufLen);
-#endif
+STATUS sendTLV11toSnmpAgent(void * Snmp_Tlv11Buf, int Snmp_Tlv11BufLen);
+
 
 #endif
-
