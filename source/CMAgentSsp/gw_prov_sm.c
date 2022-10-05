@@ -178,6 +178,9 @@ void GWPROV_PRINT(const char *format, ...)
 #define GWPROV_PRINT printf
 #endif
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 #define EVENT_QUEUE_NAME  "/Gwp_event_queue"
 
 #define MAX_SIZE    1024
@@ -2948,8 +2951,7 @@ static int GWP_act_DocsisCfgfile_callback(char *cfgFile)
     cfgFileRouterMode = -1; //In case there is no TLV202.1 in cfg file
 
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "cfgfile_status", "Started", 0);
-    snprintf(cmdstr, sizeof(cmdstr), "sysevent set %s %u", RESTART_MODULE, RESTART_NONE);
-    v_secure_system(cmdstr);
+    sysevent_set(sysevent_fd_gs, sysevent_token_gs, RESTART_MODULE, STR(RESTART_NONE), 0);
 
     if( cfgFile != NULL)
     {
