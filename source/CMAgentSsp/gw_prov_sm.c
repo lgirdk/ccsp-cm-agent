@@ -2196,6 +2196,7 @@ static void *GWP_sysevent_threadfunc(void *data)
     sysevent_setnotification(sysevent_fd, sysevent_token, "erouter_mode", &erouter_mode_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "ipv4-status",  &ipv4_status_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "ipv6-status",  &ipv6_status_asyncid);
+    sysevent_setnotification(sysevent_fd, sysevent_token, "cfgfile_apply", &cmcfg_apply_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "system-restart",  &system_restart_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "snmp_subagent-status",  &snmp_subagent_status_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "primary_lan_l3net",  &primary_lan_l3net_asyncid);
@@ -2376,6 +2377,10 @@ static void *GWP_sysevent_threadfunc(void *data)
                 }
             }
 #endif
+            else if (ret_value == CFGFILE_APPLY)
+            {
+                RestartServicesPerMask();
+            }
         }
     }
     return 0;
