@@ -495,6 +495,31 @@ static int getSyseventBridgeMode(int erouterMode, int bridgeMode) {
 	}
 }
 
+static int getDecisionErouteOperMode (void)
+{
+    esafeErouterInitModeExtIf_e initMode = DOCESAFE_EROUTER_INIT_MODE_HONOR_ROUTER_INIT_extIf;
+
+    /* Get eRouterSnmpInitMode value from HAL */
+    cm_hal_Get_ErouterModeControl(&initMode);
+
+    CcspTraceInfo(("%s: esafeErouterInitModeControl is %d, eRouterMode: %d\n", __FUNCTION__, initMode, eRouterMode));
+
+    //eRouter precendence order: esafeErouterInitModeControl > webUI mode > CM Config
+
+    if (initMode != DOCESAFE_EROUTER_INIT_MODE_HONOR_ROUTER_INIT_extIf)    //If esafeErouterInitModeControl is not set to honoreRouterInitMode(5), esafeErouterInitModeControl will take precedence.
+    {
+        translateErouterSnmpInitModeToOperMode(initMode, &eRouterMode);
+    }
+    else
+    {
+        if ((bridge_mode == BRMODE_GLOBAL_BRIDGE) || (bridge_mode == BRMODE_PRIMARY_BRIDGE))
+        {
+            eRouterMode = DOCESAFE_EROUTER_OPER_DISABLED_extIf;
+        }
+    }
+
+    return eRouterMode;
+}
 
 #if !defined(_PLATFORM_RASPBERRYPI_)
 /**************************************************************************/
@@ -1421,6 +1446,7 @@ void docsis_gotEnable_callback(unsigned char state)
 
 	GWPROV_PRINT(" Entry %s , state = %d \n", __FUNCTION__, state);
    eRouterMode = state;
+    cfgFileRouterMode = (int)state;  //Save TLV202.1 init mode from config file
     snprintf(buf, sizeof(buf), "%d", eRouterMode);
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "erouterModeInternal", buf, 0);
 }
@@ -1811,6 +1837,7 @@ static void GWP_ProcessUtopiaRestart(void)
     bridge_mode = GWP_SysCfgGetInt("bridge_mode");
     //int loc_eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
     
+    getDecisionErouteOperMode();
     active_mode = getSyseventBridgeMode(eRouterMode, bridge_mode);
 
     printf("bridge_mode = %d, erouter_mode = %d, active_mode = %d\n", bridge_mode, eRouterMode, active_mode);
@@ -1818,16 +1845,33 @@ static void GWP_ProcessUtopiaRestart(void)
 
     if (oldActiveMode == active_mode) return; // Exit if no transition
     
+    /* Update ESAFE state */
+    GWP_UpdateEsafeAdminMode(eRouterMode);
+
     webui_started = 0;
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "webuiStartedFlagReset", "0", 0);
     switch ( active_mode) 
 	{
         case BRMODE_ROUTER:
+#if !defined(_PLATFORM_RASPBERRYPI_)
+            /*Update eSafe Operational Mode and discconnect the localBridge*/
+            eSafeDevice_SetErouterOperationMode(DOCESAFE_EROUTER_OPER_NOIPV4_NOIPV6_extIf);
+            eSafeDevice_SetProvisioningStatusProgress(ESAFE_PROV_STATE_IN_PROGRESS_extIf);
+            connectLocalBridge(false);
+#endif
+
             GWP_EnterRouterMode();
             break;
 
         case BRMODE_GLOBAL_BRIDGE:
         case BRMODE_PRIMARY_BRIDGE:
+#if !defined(_PLATFORM_RASPBERRYPI_)
+            /*Update eSafe Operational Mode and connect to the localBridge*/
+            eSafeDevice_SetErouterOperationMode(DOCESAFE_EROUTER_OPER_DISABLED_extIf);
+            eSafeDevice_SetProvisioningStatusProgress(ESAFE_PROV_STATE_NOT_INITIATED_extIf);
+            connectLocalBridge(true);
+#endif
+
             GWP_EnterBridgeMode();
             break;
         default:
@@ -3233,6 +3277,11 @@ static void GWP_act_DocsisInited_callback (void)
 #if !defined(_PLATFORM_RASPBERRYPI_)
     GWP_DocsisInited();
 #endif
+
+    getDecisionErouteOperMode();
+    sysevent_bridge_mode = getSyseventBridgeMode(eRouterMode, bridge_mode);
+    active_mode = sysevent_bridge_mode;
+    CcspTraceInfo((" active_mode %d \n", active_mode));
 
 #if defined(_PROPOSED_BUG_FIX_)
 	/* Setting erouter0 MAC address after Docsis Init */
