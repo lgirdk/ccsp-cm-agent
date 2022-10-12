@@ -321,9 +321,7 @@ static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(unsigned char type, unsi
 #endif
 
 /* New implementation !*/
-#if !defined(INTEL_PUMA7) &&  !defined(_COSA_BCM_ARM_)
 static void LAN_start();
-#endif
 #if defined(INTEL_PUMA7)
 void setGWP_ipv4_event();
 void setGWP_ipv6_event();
@@ -350,7 +348,10 @@ void Low_latency_docsis_status_check(void);
 
 
 static int snmp_inited = 0;
+static int pnm_inited = 0;
+static int netids_inited = 0;
 static int gDocTftpOk = 0;
+static int lan_telnet_started = 0;
 
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
 static int ciscoconnect_started = 0;
@@ -2351,7 +2352,13 @@ static void *GWP_sysevent_threadfunc(void *data)
         async_id_t getnotification_asyncid;
         errno_t rc = -1;
         int ind = -1;
-
+#ifdef MULTILAN_FEATURE
+        errno_t rc1 = -1;
+        int ind1 = -1;
+        char brlan0_inst[BRG_INST_SIZE] = {0};
+        char brlan1_inst[BRG_INST_SIZE] = {0};
+        char* l3net_inst = NULL;
+#endif
         err = sysevent_getnotification(sysevent_fd, sysevent_token, name, &namelen,  val, &vallen, &getnotification_asyncid);
 
         if (err)
@@ -2444,7 +2451,228 @@ static void *GWP_sysevent_threadfunc(void *data)
             {
                 printf("gw_prov_sm: got system restart\n");
                 GWP_ProcessUtopiaRestart();
+            } // ToDo , To be revisited
+#if !defined(INTEL_PUMA7) && !defined(_COSA_BCM_MIPS_) && !defined(_COSA_BCM_ARM_)
+            else if (ret_value == BRING_LAN)
+#else
+            else if (ret_value == PNM_STATUS)
+#endif
+            {
+		 GWPROV_PRINT(" bring-lan/pnm-status received \n");
+                pnm_inited = 1;
+                if (netids_inited) {
+                        LAN_start();
+                }
             }
+            else if (ret_value == PRIMARY_LAN_13NET)
+            {
+		 GWPROV_PRINT(" primary_lan_l3net received \n");
+                if (pnm_inited)
+                 {
+
+#if defined (_PROPOSED_BUG_FIX_)
+                    GWPROV_PRINT("***STARTING LAN***\n");
+#endif
+
+                    LAN_start();
+                 }
+                netids_inited = 1;
+            }
+            else if (ret_value == LAN_STATUS || ret_value == BRIDGE_STATUS )
+            {
+#if defined (_PROPOSED_BUG_FIX_)
+                GWPROV_PRINT("***LAN STATUS/BRIDGE STATUS RECIEVED****\n");
+                GWPROV_PRINT("THE EVENT =%s VALUE=%s\n",name,val);
+#endif
+                rc = strcmp_s("started", strlen("started"),val, &ind);
+                ERR_CHK(rc);
+                if ((ind == 0) && (rc == EOK)){
+                    if (!webui_started) {
+#if defined(_PLATFORM_RASPBERRYPI_)
+
+                       rc = strcmp_s("bridge-status", strlen("bridge-status"),name, &ind);
+                       ERR_CHK(rc);
+                       if ((ind == 0) && (rc == EOK)) {
+                             GWP_DisableERouter();
+                        }
+                        v_secure_system("/bin/sh /etc/webgui.sh");
+#elif defined(_COSA_INTEL_XB3_ARM_) || defined(_CBR_PRODUCT_REQ_)
+                        // For other devices CcspWebUI.service launches the GUI processes
+                        startWebUIProcess();
+#else
+			if ((ret_value == BRIDGE_STATUS) && (!bridgeModeInBootup))
+			{
+			    char output[ 32 ] = { 0 };
+			    memset(output,0,sizeof(output));
+			    GWPROV_PRINT(" bridge-status = %s start webgui.sh \n", val );
+			    v_secure_system("/bin/sh /etc/webgui.sh &");
+			}
+#endif
+                        webui_started = 1 ;
+#ifdef CONFIG_CISCO_HOME_SECURITY
+                        //Piggy back off the webui start event to signal XHS startup
+                        sysevent_get(sysevent_fd_gs, sysevent_token_gs, "homesecurity_lan_l3net", buf, sizeof(buf));
+                        if (buf[0] != '\0') sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", buf, 0);
+#endif
+
+#if defined(RDK_ONEWIFI) && (defined(_XB6_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_))
+        GWPROV_PRINT("CALL VLAN UTIL TO SET UP LNF\n");
+        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "lnf-setup","6", 0);
+#endif
+
+                        // trigger multinet start
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET3_INSTANCE, 0);
+#ifdef _PUMA6_ARM_
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET4_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET5_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET6_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET7_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET8_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET9_INSTANCE, 0);
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET10_INSTANCE, 0);
+#endif
+                    }
+#ifdef MULTILAN_FEATURE
+        char buf[256];
+        sysevent_get(sysevent_fd_gs, sysevent_token_gs, "primary_lan_l3net", brlan0_inst, sizeof(brlan0_inst));
+        sysevent_get(sysevent_fd_gs, sysevent_token_gs, "homesecurity_lan_l3net", brlan1_inst, sizeof(brlan1_inst));
+        /*Get the active bridge instances and bring up the bridges */
+        sysevent_get(sysevent_fd_gs, sysevent_token_gs, "l3net_instances", buf, sizeof(buf));
+        l3net_inst = strtok(buf, " ");
+        while(l3net_inst != NULL)
+        {
+            rc = strcmp_s(l3net_inst, strlen(l3net_inst),brlan0_inst, &ind);
+            ERR_CHK(rc);
+            rc1 = strcmp_s(l3net_inst, strlen(l3net_inst),brlan1_inst, &ind1);
+            ERR_CHK(rc1);
+            /*brlan0 and brlan1 are already up. We should not call their instances again*/
+            if(!(((ind == 0) && (rc == EOK)) || ((ind1 == 0) && (rc1 == EOK))))
+            {
+                sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", l3net_inst, 0);
+            }
+            l3net_inst = strtok(NULL, " ");
+        }
+#endif
+
+                    if (factory_mode && lan_telnet_started == 0) {
+                        v_secure_system("/usr/sbin/telnetd -l /usr/sbin/cli -i brlan0");
+                        lan_telnet_started=1;
+                    }
+#ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
+
+                    if (!ciscoconnect_started) {
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ciscoconnect-restart", "", 0);
+                        ciscoconnect_started = 1 ;
+                    }
+#endif
+					if (!once) {
+						check_lan_wan_ready();
+					}
+		    bridgeModeInBootup = 0; // reset after lan/bridge status is received.
+
+                    /*The bridge mode is started. We don't know if the link up event will come or not.
+                    If the RF is disconnected all the time, no link up event and of cause no link down event.
+                    So start the bridge mode DHCP server at first.*/
+                    if(strcmp(name, "bridge-status")==0)
+                    {
+                        char status[16] = {0};
+                        sysevent_get(sysevent_fd_gs, sysevent_token_gs, "wan-status", status, sizeof(status));
+                        if(strcmp(status, "started"))
+                        {
+                            sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dhcp_server-bridge-mode-start", "", 0);
+                        }
+                        system("/etc/utopia/port_bridging.sh restart &");
+                    }
+                }
+            } else if (ret_value == DHCPV6_CLIENT_V6ADDR) {
+                unsigned char v6addr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN ] = {0};
+                /* Coverity Issue Fix - CID:79291 : UnInitialised varible  */
+                unsigned char soladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN ] = {0} ;
+                inet_pton(AF_INET6, val, v6addr);
+#if !defined(_PLATFORM_RASPBERRYPI_)
+                getMultiCastGroupAddress(v6addr,soladdr);
+#endif
+                inet_ntop(AF_INET6, soladdr, val, sizeof(val));
+
+
+                sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv6_"ER_NETDEVNAME"_dhcp_solicNodeAddr", val,0);
+
+                unsigned char lan_wan_ready = 0;
+                char result_buf[32];
+                result_buf[0] = '\0';
+
+                sysevent_get(sysevent_fd_gs, sysevent_token_gs, "start-misc", result_buf, sizeof(result_buf));
+                lan_wan_ready = strstr(result_buf, "ready") == NULL ? 0 : 1;
+
+                if(!lan_wan_ready) {
+                    v_secure_system("ip6tables -t mangle -I PREROUTING 1 -i %s -d %s -p ipv6-icmp -m icmp6 --icmpv6-type 135 -m limit --limit 20/sec -j ACCEPT", ER_NETDEVNAME, val);
+                }
+                else {
+                    sysevent_set(sysevent_fd_gs, sysevent_token_gs, "firewall-restart", "",0);
+                }
+
+#ifdef DSLITE_FEATURE_SUPPORT
+                /* Modification for DSLite Service */
+                if(!strcmp(val, ""))//If erouter0 IPv6 address is null
+                {
+                    v_secure_system("service_dslite stop &");
+                }
+                else
+                {
+                    v_secure_system("service_dslite restart &");
+                }
+#endif
+
+#if defined(INTEL_PUMA7)
+                eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
+                /*If the GW is IPv6 only mode, start the hotspot only after the IPv6 address ready*/
+                if (eRouterMode==2) {
+                    sysevent_set(sysevent_fd_gs, sysevent_token_gs, "hotspot-restart", "", 0);
+                }
+#endif
+            }
+			else if (ret_value == WAN_STATUS) {
+                                rc = strcmp_s("started", strlen("started"),val, &ind);
+                                ERR_CHK(rc);
+                                if ((!ind) && (rc == EOK))
+				{
+                                    if (!once) {
+						check_lan_wan_ready();
+					}
+#if defined(INTEL_PUMA7)
+                    eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
+                    /*If the GW is IPv4 only mode or Dual-Stack mode, try to start the hotspot after the IPv4 WAN ready.
+                    Explanation for the special cases on dual stack mode:
+                    1) If both IPv4 and IPv6 adress can be got, start the hotspot here after IPv4 WAN ready
+                    2) If IPv4 address can be got but IPv6 address not able to get, wait for at most 30s for IPv6 address and then
+                    start the hotspot
+                    3) If IPv4 address not able to get, the IPv6 address won't be got(because the DHCPv6 client starts only after the IPv4 WAN ready)
+                    that means gw won't work if without IPv4 address, no need to start the hotspot at this case.*/
+                    if (eRouterMode==1) {
+                        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "hotspot-restart", "", 0);
+                    }
+                    else if(eRouterMode==3)
+                    {
+                        /*Create a thread to wait for the IPv6 address ready, at most wait for 30s if no IPv6 address got*/
+                        pthread_create(&sysevent_tid, NULL, GWP_start_hotspot_threadfunc, NULL);
+                    }
+#endif
+                    system("/etc/utopia/port_bridging.sh restart &");
+
+                                 }
+
+                // LGI ADD BEGIN
+                else if (!strcmp(val, "stopped"))
+                { // if WAN down, the zebra need to re-launch to take this change for RA adapting
+                    system("service_routed radv-restart");
+                }
+                // LGI ADD END
+			}
+			else if (ret_value == IPV6_PREFIX && strlen(val) > 5) {
+				if (!once) {
+						check_lan_wan_ready();
+					}
+			}
 #if defined (INTEL_PUMA7)
 			//Intel Proposed RDKB Generic Bug Fix from XB6 SDK
 			else if (ret_value == CURRENT_WAN_IPADDR)
@@ -2557,6 +2785,14 @@ static void GWP_act_DocsisLinkDown_callback_2()
    #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
        v_secure_system("sysevent set dhcpv6_client-stop");
    #endif
+       // dhcp server restart event will regenerate dnsmasq.conf file and restart dnsmasq service.
+       // DHCP options (lease time, troubleshoot_wizard changes) add into dnsmasq.conf file depends on wan_status.
+       sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dhcp_server-restart", "1", 0);
+    }
+
+    if(bridge_mode != 0)//full-bridge or psudo-bridge
+    {
+        sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dhcp_server-bridge-mode-start", "", 0);
     }
 
 #if defined (WAN_FAILOVER_SUPPORTED)
@@ -2611,13 +2847,12 @@ static int GWP_act_DocsisLinkUp_callback()
     printf("\n**************************\n");
     printf("\nsysevent set phylink_wan_state up\n");
     printf("\n**************************\n\n");
-	
+
 #if defined (WAN_FAILOVER_SUPPORTED)
 	publishDocsisLinkStatus(true);
     publishCableModemRfSignalStatus();
 #endif
 
-    
 #if defined(_PLATFORM_RASPBERRYPI_)
      char *temp;
      char command[128];
@@ -2672,6 +2907,7 @@ static int GWP_act_DocsisLinkUp_callback()
     #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
 	sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dhcpv6_client-start", "", 0);
     #endif
+	system("service_routed radv-restart");
     }
     if (!logged_docsis_reg_complete_uptime)
     {
@@ -2698,6 +2934,12 @@ static int GWP_act_DocsisLinkUp_callback()
 	#endif
     }
 #endif
+    char logbuf[256];
+    syscfg_get( NULL, "last_reset_reason", logbuf, sizeof(logbuf) );
+    if ( logbuf[0] != 0 )
+        printf("Inside IF logbuf of last_reset_reason");
+    syscfg_unset( NULL, "last_reset_reason" );
+    syscfg_commit();
     return 0;
 }
 
@@ -3631,7 +3873,6 @@ static void GWP_act_DocsisTftpOk_callback(){
 }*/
 #endif
 
-#if !defined(INTEL_PUMA7) &&  !defined(_COSA_BCM_ARM_)
 static void LAN_start (void)
 {
     int ret = -1;
@@ -3675,7 +3916,6 @@ static void LAN_start (void)
     }
     return;
 }
-#endif
 
 int GWP_PushEventInMsgq(ClbkInfo *pInfo )
 {
