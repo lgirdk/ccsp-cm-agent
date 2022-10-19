@@ -329,7 +329,7 @@ void setGWP_ipv6_event();
 
 static void *GWP_UpdateTr069CfgThread( void *data );
 
-void GWP_Util_get_shell_output( FILE *fp, char *out, int len );
+void GWP_Util_get_shell_output( char * cmd, char *out, int len );
 
 void *GWP_EventHandler(void *arg);
 int GWP_PushEventInMsgq(ClbkInfo *pInfo );
@@ -414,14 +414,9 @@ static void GWP_EnterRouterMode(void);
 
 static bool isHotspotEnabled()
 {
-    FILE *fp;
-
     char buf[2];
 
-    fp = v_secure_popen("r", "psmcli get dmsb.hotspot.enable");
-
-    //_get_shell_output(fp, buf, sizeof(buf));
-    GWP_Util_get_shell_output(fp, buf, sizeof(buf));
+    GWP_Util_get_shell_output("psmcli get dmsb.hotspot.enable", buf, sizeof(buf));
     buf[1] = '\0';
 
     if (!strcmp(buf, "1"))
@@ -3138,16 +3133,33 @@ static void *GWP_linkstate_threadfunc(void *data)
 #endif
 
 /* GWP_Util_get_shell_output() */
-void GWP_Util_get_shell_output( FILE *fp, char *out, int len )
+void GWP_Util_get_shell_output( char * cmd, char *out, int len )
 {
+    FILE  *fp = NULL;
+    char   buf[ 16 ] = { 0 };
     char  *p = NULL;
+    errno_t rc = -1;
+
+    fp = popen( cmd, "r" );
+
     if ( fp )
     {
-        fgets(out, len, fp);
-        if ((p = strchr(out, '\n'))) 
+        if (fgets( buf, sizeof( buf ), fp ) == NULL)
+            GWPROV_PRINT("%s fgets error \n", __FUNCTION__);
+
+        /*we need to remove the \n char in buf*/
+        if ( ( p = strchr( buf, '\n' ) ) )
+            *p = 0;
+
+        rc = strcpy_s(out, len, buf);
+        if(rc != EOK)
         {
-            *p = '\0';
-        }      
+            ERR_CHK(rc);
+            pclose( fp );
+            return;
+        }
+
+        pclose( fp );
     }
 }
 
@@ -3165,7 +3177,7 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 	pthread_detach( pthread_self( ) );
 
 	//Check whether TLV binary is present or not
-	if( 0 == IsFileExists( TR69_TLVDATA_FILE ) )
+	if( 0 == IsFileExists( TR69_TLVDATA_FILE ) || (tlvObject == NULL))
 	{
 		GWPROV_PRINT(" %s file not present \n", TR69_TLVDATA_FILE );
 		IsNeedtoProceedFurther = false;
@@ -3175,28 +3187,15 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 	if( IsNeedtoProceedFurther )
 	{
 		char	output[ 16 ] = { 0 };
-		FILE *fp = NULL;
-		int ret = 0;
 
 		//Get Tr069 process PID
-		fp = v_secure_popen("r","pidof CcspTr069PaSsp");
-		if(fp == NULL)
-		{
-		    GWPROV_PRINT(" %s Error in opening pipe! \n",__FUNCTION__);
-                }
-                else
-                {
-		    GWP_Util_get_shell_output( fp, output, sizeof( output ) );
-		    ret = v_secure_pclose(fp);
-		    if(ret < 0) {
-		        GWPROV_PRINT(" %s Error in closing pipe! [%d] \n",__FUNCTION__,ret);
-		    }
-                }
+		GWP_Util_get_shell_output( "pidof CcspTr069PaSsp", output, sizeof( output ) );
+
 		/*
 		 * Check Tr069 process is running or not. If not then no need to configure TLV data because it will get 
 		 * update during Tr069 process initialization. so break the loop
 		 */
-		if ('\0' == output[0])
+		if ('\0' == output[0] || ( 0 == strlen( output ) ))
 		{
 			GWPROV_PRINT("%s CcspTr069PaSsp is not running. No need to configure\n", __FUNCTION__);
 			IsNeedtoProceedFurther= false;
