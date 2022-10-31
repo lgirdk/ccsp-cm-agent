@@ -190,6 +190,7 @@ _COSA_DML_CM_WANCFG
     BOOLEAN                         MonitorOperStatusAndNotify;
     BOOLEAN                         ConfigureWan;
     BOOLEAN                         CustomWanConfigUpdate;
+    BOOLEAN                         Upstream;
 }
 COSA_DML_CM_WANCFG,  *PCOSA_DML_CM_WANCFG;
 
