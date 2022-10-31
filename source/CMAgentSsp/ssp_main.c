@@ -726,6 +726,9 @@ int InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
 
     pMsg->param[MSG_WAN_NAME].paramType = ccsp_string;
 
+#if defined(_LG_OFW_)
+    strncpy(pMsg->param[MSG_WAN_NAME].paramValue,WAN_PHYIF_DOCSIS_NAME,sizeof(pMsg->param[MSG_WAN_NAME].paramValue));
+#else
     if (bEthWanEnable == TRUE)
     {
         strncpy(pMsg->param[MSG_WAN_NAME].paramValue,WAN_PHYIF_DOCSIS_NAME,sizeof(pMsg->param[MSG_WAN_NAME].paramValue));
@@ -734,6 +737,7 @@ int InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
     {
         strncpy(pMsg->param[MSG_WAN_NAME].paramValue,wanName,sizeof(pMsg->param[MSG_WAN_NAME].paramValue));
     }
+#endif /* _LG_OFW_ */
     memset(acSetParamName, 0, sizeof(acSetParamName));
     snprintf(acSetParamName, sizeof(acSetParamName), WAN_BOOTINFORM_PHYPATH_PARAM_NAME, WAN_CM_INTERFACE_INSTANCE_NUM);
     strncpy(pMsg->param[MSG_PHY_PATH].paramName,acSetParamName,sizeof(pMsg->param[MSG_PHY_PATH].paramName));
