@@ -258,6 +258,15 @@ X_CISCO_COM_CableModem_GetParamBoolValue
         *pBool = pWanCfg->CustomWanConfigUpdate;
         return TRUE;
     }
+
+     rc =  strcmp_s("Upstream",strlen("Upstream"),ParamName, &ind);
+     ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        /* collect value */
+        *pBool = pWanCfg->Upstream;
+        return TRUE;
+    }
 #endif
 
     /* AnscTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
@@ -1373,6 +1382,26 @@ X_CISCO_COM_CableModem_SetParamBoolValue
     {
         pWanCfg->CustomWanConfigUpdate = bValue;
         CosaDmlCMWanUpdateCustomConfig(pMyObject,bValue);
+        return TRUE;
+    }
+
+    //TODO: Figure out and implement all necessary actions when Upstream is changed. This is only PoC
+    rc =  strcmp_s( "Upstream",strlen("Upstream"),ParamName, &ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        pWanCfg->Upstream = bValue;
+        if (bValue)
+        {
+            v_secure_system("brctl addbr erouter0; ifconfig erouter0 up; brctl addif erouter0 lbr0");
+            v_secure_system("dmcli eRT setv Device.X_RDK_WanManager.CPEInterface.1.Wan.Name string erouter0 &");
+            sleep(1);
+            v_secure_system("dmcli eRT setv Device.X_RDK_WanManager.CPEInterface.1.Wan.LinkStatus string Up &");
+        }
+        else
+        {
+            v_secure_system("dmcli eRT setv Device.X_RDK_WanManager.CPEInterface.1.Wan.LinkStatus string Down &");
+        }
         return TRUE;
     }
 #endif
