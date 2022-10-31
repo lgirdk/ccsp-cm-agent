@@ -2056,10 +2056,6 @@ static void GWP_act_DocsisLinkDown_callback_1()
 	}
 #endif
 
-    if (true == IsEthWanEnabled())
-    {
-        return;
-    }
     phylink_wan_state = 0;
 	GWPROV_PRINT(" Entry %s \n", __FUNCTION__);
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "phylink_wan_state", "down", 0);
@@ -2080,11 +2076,6 @@ static void GWP_act_DocsisLinkDown_callback_2()
 	}
 #endif
 
-    if (true == IsEthWanEnabled())
-    {
-        return;
-    }
- 
     GWPROV_PRINT("Entry %s \n",__FUNCTION__);
     if (eRouterMode != DOCESAFE_ENABLE_DISABLE_extIf)
     {
@@ -2153,10 +2144,6 @@ static int GWP_act_DocsisLinkUp_callback()
 	}
 #endif
 
-    if (true == IsEthWanEnabled())
-    {
-        return -1;
-    }
     phylink_wan_state = 1;
     GWPROV_PRINT("Entry %s \n",__FUNCTION__);
     info.eventType = EVENT_GWP_LINK_UP;
