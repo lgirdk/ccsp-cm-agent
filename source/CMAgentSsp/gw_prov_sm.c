@@ -2970,8 +2970,6 @@ gimReply:
 
     /* Reply to GIM SRN */
     notificationReply_CfgFileForEsafe();
-    
-    return;
 }
 
 /**************************************************************************/
