@@ -32,7 +32,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 **********************************************************************/
+
 #ifdef ENABLE_RDK_WANMANAGER
+
 #define _GW_PROV_SM_C_
 
 /*! \file gw_prov_sm.c
@@ -42,6 +44,7 @@
 /**************************************************************************/
 /*      INCLUDES:                                                         */
 /**************************************************************************/
+
 #include "ccsp_trace.h"
 #include <arpa/inet.h>
 #include <errno.h>
@@ -50,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -69,12 +73,8 @@
 #include <syscfg/syscfg.h>
 #include <pthread.h>
 #include "gw_prov_abstraction.h"
-#include "Tr69_Tlv.h"
-#ifdef AUTOWAN_ENABLE
+#include <Tr69_Tlv.h>
 #include "gw_prov_sm.h"
-#endif
-#if !defined(_PLATFORM_RASPBERRYPI_)
-#endif
 #include <time.h>
 #include "secure_wrapper.h"
 #include <sys/sysinfo.h>
@@ -84,6 +84,7 @@
 #endif
 
 #include <mqueue.h>
+
 #include <telemetry_busmessage_sender.h>
 #include "safec_lib_common.h"
 #if defined(ENABLE_LLD_SUPPORT) 
@@ -103,14 +104,13 @@
 #endif
 
 #ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
-#include "cimplog.h"
+#include <cimplog/cimplog.h>
 #define LOGGING_MODULE           "GWPROV"
 #define OnboardLog(...)          rdk_log_onboard(LOGGING_MODULE, __VA_ARGS__)
 #else
 #define OnboardLog(...)
 #endif
 
-/* Global Variables*/
 #define WHITE	0
 #define RED	3
 #define SOLID	0
@@ -149,8 +149,7 @@
 #define DOCSIS_MULTICAST_PROC_MDFMODE_ENABLED "Enable"
 #define TR69_TLVDATA_FILE "/nvram/TLVData.bin"
 #define DEBUG_INI_NAME  "/etc/debug.ini"
-#define COMP_NAME_GW "LOG.RDK.GWPROV"
-#define LOG_INFO_GW 4
+#define COMP_NAME_GW "LOG.RDK.CM"
 
 #ifdef MULTILAN_FEATURE
 /* Syscfg keys used for calculating mac addresses of local interfaces and bridges */
@@ -166,8 +165,16 @@
 #define BASE_MAC_WLAN_OFFSET                 145
 #endif
 
-#if defined(AUTOWAN_ENABLE) && defined(INTEL_PUMA7)
-#define ETHWAN_FILE     "/nvram/ETHWAN_ENABLE"
+#ifdef FEATURE_SUPPORT_RDKLOG
+void GWPROV_PRINT(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    RDK_LOG1(RDK_LOG_INFO, COMP_NAME_GW, format, args);
+    va_end(args);
+}
+#else
+#define GWPROV_PRINT printf
 #endif
 
 #define EVENT_QUEUE_NAME  "/Gwp_event_queue"
@@ -273,7 +280,8 @@ static const GwpThread_MsgItem gwpthreadMsgArr[] = {
     {"wan-status",                                 WAN_STATUS},
     {"ipv6_prefix",                                IPV6_PREFIX},
     {"current_wan_ipaddr",                         CURRENT_WAN_IPADDR},
-    {"ipv6_dhcp6_addr",                            IPV6_DHCP6_ADDR}};
+    {"ipv6_dhcp6_addr",                            IPV6_DHCP6_ADDR},
+};
 
 /**************************************************************************/
 /*      LOCAL DECLARATIONS:                                               */
@@ -287,16 +295,18 @@ static STATUS GW_TlvParserInit(void);
 static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value);
 
 #if !defined(INTEL_PUMA7)
+static STATUS GW_UpdateTr069Cfg(void);
+static STATUS GW_SetTr069PaDataInTLV11Buffer(Uint8* buf, Int* len);
 static bool GW_SetTr069PaMibBoolean(Uint8 **cur, Uint8 sub_oid, Uint8 value);
 static bool GW_SetTr069PaMibString(Uint8 **cur, Uint8 sub_oid, Uint8* value);
-static STATUS GW_SetTr069PaDataInTLV11Buffer(Uint8* buf, Int* len);
-static STATUS GW_UpdateTr069Cfg(void);
 #endif
 static void check_lan_wan_ready();
 //static TlvParseCallbackStatus_e gotEnableType(Uint8 type, Uint16 length, const Uint8* value);
+
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
 static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(Uint8 type, Uint16 length, const Uint8* value);
 #endif
+
 /* New implementation !*/
 #if !defined(INTEL_PUMA7) &&  !defined(_COSA_BCM_ARM_)
 static void LAN_start();
@@ -306,9 +316,10 @@ void setGWP_ipv4_event();
 void setGWP_ipv6_event();
 #endif
 
-void *GWP_UpdateTr069CfgThread( void *data );
+static void *GWP_UpdateTr069CfgThread( void *data );
 
 void GWP_Util_get_shell_output( FILE *fp, char *out, int len );
+
 void *GWP_EventHandler(void *arg);
 int GWP_PushEventInMsgq(ClbkInfo *pInfo );
 #if defined (WAN_FAILOVER_SUPPORTED)
@@ -319,6 +330,7 @@ void CreateThreadandSendCondSignalToPthread();
 #endif //WAN_FAILOVER_SUPPORTED
 
 void Low_latency_docsis_status_check(void);
+
 /**************************************************************************/
 /*      LOCAL VARIABLES:                                                  */
 /**************************************************************************/
@@ -326,26 +338,22 @@ void Low_latency_docsis_status_check(void);
 
 static int snmp_inited = 0;
 static int gDocTftpOk = 0;
+
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
 static int ciscoconnect_started = 0;
 #endif
+
 static int webui_started = 0;
 static Uint32 factory_mode = 0;
 static int bridgeModeInBootup = 0;
 static int entryCallbackInited = 0;
 
-
 static DOCSIS_Esafe_Db_extIf_e eRouterMode = DOCESAFE_ENABLE_DISABLE_extIf;
 static DOCSIS_Esafe_Db_extIf_e oldRouterMode;
 static int sysevent_fd;
 static token_t sysevent_token;
-#if !defined(AUTOWAN_ENABLE)
 static int sysevent_fd_gs;
 static token_t sysevent_token_gs;
-#else
-int sysevent_fd_gs;
-token_t sysevent_token_gs;
-#endif
 static pthread_t sysevent_tid;
 #if defined(_PLATFORM_RASPBERRYPI_)
 static pthread_t linkstate_tid;
@@ -363,6 +371,7 @@ static pthread_t Gwp_event_tid;
 static int sIPv4_acquired = 0;
 static int sIPv6_acquired = 0;
 #endif
+
 #if defined (WAN_FAILOVER_SUPPORTED)
 // Declaration of thread condition variable
 pthread_cond_t LinkdownCond=PTHREAD_COND_INITIALIZER;
@@ -378,29 +387,31 @@ typedef struct{
 }docsis_linkdow_testcase;
 docsis_linkdow_testcase DocsisLd_cfg={false,false};
 #endif //WAN_FAILOVER_SUPPORTED
+
 /**************************************************************************/
 /*      LOCAL FUNCTIONS:                                                  */
 /**************************************************************************/
 static void GWP_EnterBridgeMode(void);
 static void GWP_EnterRouterMode(void);
 
-bool IsEthWanEnabled()
+static bool IsEthWanEnabled (void)
 {
-    char buf[32];
-
-    memset(buf,0,sizeof(buf));
-    if (0 == access( "/nvram/ETHWAN_ENABLE" , F_OK ))
+    if (access( "/nvram/ETHWAN_ENABLE" , F_OK ) == 0)
     {
+        char buf[8];
+
         if (syscfg_get(NULL, "eth_wan_enabled", buf, sizeof(buf)) == 0)
         {
-            if (0 == strcmp(buf,"true"))
+            if (strcmp(buf, "true") == 0)
             {
                 return TRUE;
             }
         }
     }
+
     return FALSE;
 }
+
 static eGwpThreadType Get_GwpThreadType(char *name)
 {
     errno_t rc       = -1;
@@ -512,22 +523,16 @@ static void GW_Local_PrintHexStringToStderr(Uint8 *str, Uint16 len)
     fprintf(stderr, "'\n");
  }
 #endif
-int IsFileExists(const char *fname)
+
+static int IsFileExists (const char *fname)
 {
-    FILE *file = NULL;
-    file =  fopen(fname, "r");
-    if (file)
-    {
-        fclose(file);
+    if (access(fname, F_OK) == 0)
         return 1;
-    }
+
     return 0;
 }
 
 #define TR069PidFile "/var/tmp/CcspTr069PaSsp.pid"
-//#define FALSE 0
-//#define TRUE 1
-static char url[600] = {0};
 
 static bool WriteTr69TlvData(Uint8 typeOfTLV)
 {
@@ -567,9 +572,9 @@ static bool WriteTr69TlvData(Uint8 typeOfTLV)
 	{
                 /* Coverity Fix:CID 62659 CHECKED_RETURN  */
 		if( fread(tlvObject, sizeof(Tr69TlvData), 1, file) < 1 )
-		{		
+		{
 	               CcspTraceInfo((" Error in fread  %s \n", __FUNCTION__));
-		}		
+		}
                     
 		fclose(file);
 	}
@@ -592,12 +597,6 @@ static bool WriteTr69TlvData(Uint8 typeOfTLV)
                 rc =  memset_s(tlvObject->URL,sizeof(tlvObject->URL), 0, sizeof(tlvObject->URL));
                 ERR_CHK(rc);
                 rc = strcpy_s(tlvObject->URL,sizeof(tlvObject->URL),gwTlvsLocalDB.tlv2.URL);
-                if(rc != EOK)
-                {
-                    ERR_CHK(rc);
-                    return FALSE;
-                }
-                rc = strcpy_s(url,sizeof(url),tlvObject->URL);
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
@@ -690,7 +689,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                //    return TLV_PARSE_CALLBACK_ABORT_EXTIF;
+//                  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
                 }
                 gwTlvsLocalDB.tlv2.URL[length] = '\0';
                 gwTlvsLocalDB.tlv2_flags.URL_modified = 1;
@@ -705,7 +704,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                  //  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
+//                  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
                 }
                 gwTlvsLocalDB.tlv2.Username[length] = '\0';
                 gwTlvsLocalDB.tlv2_flags.Username_modified = 1;
@@ -720,7 +719,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                    //return TLV_PARSE_CALLBACK_ABORT_EXTIF;
+//                  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
                 }
                 gwTlvsLocalDB.tlv2.Password[length] = '\0';
                 gwTlvsLocalDB.tlv2_flags.Password_modified = 1;
@@ -735,7 +734,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                //    return TLV_PARSE_CALLBACK_ABORT_EXTIF;
+//                  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
                 }
                 gwTlvsLocalDB.tlv2.ConnectionRequestUsername[length] = '\0';
                 gwTlvsLocalDB.tlv2_flags.ConnectionRequestUsername_modified = 1;
@@ -750,7 +749,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                  //  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
+//                  return TLV_PARSE_CALLBACK_ABORT_EXTIF;
                 }
                 gwTlvsLocalDB.tlv2.ConnectionRequestPassword[length] = '\0';
                 gwTlvsLocalDB.tlv2_flags.ConnectionRequestPassword_modified = 1;
@@ -773,7 +772,7 @@ static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
 			
     if(WriteTr69TlvData(type))
 	{		
-//        return TLV_PARSE_CALLBACK_OK_EXTIF;
+//      return TLV_PARSE_CALLBACK_OK_EXTIF;
 	}
 	else
 	{
@@ -959,7 +958,7 @@ static STATUS GW_UpdateTr069Cfg(void)
     /*Send TLV11 data to SNMP Agent*/
     if(Snmp_Tlv11BufLen)
     {
-#if !defined(_COSA_BCM_ARM_)
+#if !defined (_COSA_BCM_ARM_)
         ret = sendTLV11toSnmpAgent((void *)Snmp_Tlv11Buf, (int)Snmp_Tlv11BufLen );
 #endif
         
@@ -984,15 +983,9 @@ static STATUS GW_UpdateTr069Cfg(void)
         if(tlv11Resp->len >= sizeof(int))
         {
             Int32 errorCode = 0;
-
-	    /*
-             * Copy the error code
-             */
-	    errorCode = (int) *(tlv11Resp->value);
-
+            memcpy(&errorCode, tlv11Resp->value, sizeof(int));
             /*Need to send the required event*/
             // ReportTlv11Events(errorCode);
-
             LOG_GW_ERROR("Failed to set TLV11 parameters - error code = %d", errorCode);
             // fprintf(stderr, "<RT> %s - Failed to set TLV11 parameters - error code = %d\n", __FUNCTION__, errorCode);
         }
@@ -1019,20 +1012,19 @@ label_nok:
 }
 #endif
 #endif
+
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
 static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(Uint8 type, Uint16 length, const Uint8* value)
 {
     Uint8 tpMode = *value;
     TlvParseCallbackStatusExtIf_e st = TLV_PARSE_CALLBACK_OK_EXTIF;
-    char cmd[64] = {0};
 
     printf("TLV %d, Len %d : Topology Mode\n", type, length);
     CcspTraceInfo((" %s : type %d, length %d , tpMode %d\n", __FUNCTION__, type, length,tpMode));
     if ( (tpMode == TLV202_42_FAVOR_DEPTH) || (tpMode == TLV202_42_FAVOR_WIDTH))
     {
         printf("eSafe CFG file : Found Topology Mode, val %d\n", tpMode);
-        snprintf(cmd, sizeof(cmd), "sysevent set erouter_topology-mode %d", tpMode);
-        v_secure_system(cmd);
+        v_secure_system("sysevent set erouter_topology-mode %d", tpMode);
     }
     else
     {
@@ -1079,15 +1071,14 @@ static int GWP_SysCfgGetInt(const char *name)
  **************************************************************************/
 static int GWP_SysCfgSetInt(const char *name, int int_value)
 {
-   char value[20];
+   CcspTraceInfo((" %s : name = %s , value = %d \n", __FUNCTION__, name, int_value));
 
-   sprintf(value, "%d", int_value);
-   CcspTraceInfo((" %s : name = %s , value = %s \n", __FUNCTION__, name, value));
-   if (!strncmp(name, "last_erouter_mode", strlen("last_erouter_mode")) && !strncmp(value, "2", strlen("2")))
+   if ((strcmp(name, "last_erouter_mode") == 0) && (int_value == 2))
    {
        t2_event_d("SYS_INFO_ERouter_Mode_2", 1);
    }
-   return syscfg_set(NULL, name, value);
+
+   return syscfg_set_u(NULL, name, int_value);
 }
 
 #if !defined(_PLATFORM_RASPBERRYPI_)
@@ -1106,14 +1097,14 @@ static STATUS GWP_UpdateEsafeAdminMode(DOCSIS_Esafe_Db_extIf_e enableMode)
 }
 
 /**************************************************************************/
-/*! \fn Bool GWP_IsGwEnabled(void)
+/*! \fn int GWP_IsGwEnabled(void)
  **************************************************************************
  *  \brief Is gw enabled
  *  \return True/False
 **************************************************************************/
 static int GWP_IsGwEnabled(void)
 {
-    
+
     if (eRouterMode == DOCESAFE_ENABLE_DISABLE_extIf)
     {
         return FALSE;
@@ -1140,7 +1131,7 @@ validate_mode(int* bridge_mode, int* eRouterMode)
 		GWP_SysCfgSetInt("last_erouter_mode", *eRouterMode);
 		GWP_SysCfgSetInt("bridge_mode", *bridge_mode);
 		if( syscfg_commit() != 0)
-		{	
+		{
                       CcspTraceInfo((" %s : syscfg_commit not success \n", __FUNCTION__));
 		}
                   
@@ -1205,7 +1196,7 @@ static void GWP_DocsisInited(void)
 	
      /* Add paths */
 
-#if !defined(_COSA_BCM_ARM_)
+#if !defined (_COSA_BCM_ARM_)
      eSafeDevice_AddeRouterPhysicalNetworkInterface(IFNAME_ETH_0, True);
            
      eSafeDevice_AddeRouterPhysicalNetworkInterface("usb0",True);
@@ -1306,8 +1297,8 @@ static void GWP_DisableERouter(void)
     /* Reset Switch, to remove all VLANs */ 
     eSafeDevice_SetProvisioningStatusProgress(ESAFE_PROV_STATE_NOT_INITIATED_extIf);
 #endif
-//     v_secure_system("sysevent set bridge_mode %d", bridge_mode);
-//     v_secure_system("sysevent set forwarding-restart");
+//   v_secure_system("sysevent set bridge_mode %d", bridge_mode);
+//   v_secure_system("sysevent set forwarding-restart");
     
     
     GWP_EnterBridgeMode();
@@ -1361,8 +1352,8 @@ char MocaStatus[16] = {0};
 	if ((syscfg_set_commit(NULL, "MoCA_previous_status", MocaStatus) != 0))
     {
         printf("syscfg_set failed\n");
-        
     }
+
     v_secure_system("dmcli eRT setv Device.MoCA.Interface.1.Enable bool false");
     v_secure_system("sysevent set bridge_mode %d", BRMODE_PRIMARY_BRIDGE);
     v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.ErouterEnable bool false");
@@ -1370,6 +1361,7 @@ char MocaStatus[16] = {0};
     sendPseudoBridgeModeMessage(TRUE);
 }
 #endif
+
 /**************************************************************************/
 /*! \fn void GWP_UpdateERouterMode(void)
  **************************************************************************
@@ -1404,7 +1396,6 @@ static void GWP_UpdateERouterMode(void)
             v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.LanManagementEntry.1.LanMode string bridge-static");
             
             GWP_DisableERouter();
-            
             GWP_SysCfgSetInt("last_erouter_mode", eRouterMode);  // save the new mode only
               if (syscfg_commit() != 0) 
                     printf("syscfg_commit  for new mode failed\n");
@@ -1458,7 +1449,7 @@ static void GWP_UpdateERouterMode(void)
         }
     }
 #if !defined(INTEL_PUMA7)
-	sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? TRUE : FALSE);
+    sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? TRUE : FALSE);
 #endif
 }
 
@@ -1851,8 +1842,9 @@ static void *GWP_sysevent_threadfunc(void *data)
 #endif
 
 	time_t time_now = { 0 }, time_before = { 0 };
+
     if (data != NULL)
-	printf("\n");
+        printf("\n");
     CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     sysevent_setnotification(sysevent_fd, sysevent_token, "erouter_mode", &erouter_mode_asyncid);
     sysevent_setnotification(sysevent_fd, sysevent_token, "ipv4-status",  &ipv4_status_asyncid);
@@ -2075,11 +2067,10 @@ static void GWP_act_DocsisLinkDown_callback_1()
     phylink_wan_state = 0;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "phylink_wan_state", "down", 0);
-       v_secure_system("rm -rf /tmp/phylink_wan_state_up"); 
+    remove("/tmp/phylink_wan_state_up");
     printf("\n**************************\n");
     printf("\nsysevent set phylink_wan_state down\n");
     printf("\n**************************\n\n");
-    return;
 }
 
 static void GWP_act_DocsisLinkDown_callback_2()
@@ -2118,17 +2109,16 @@ static void GWP_act_DocsisLinkDown_callback_2()
            sysevent_set(sysevent_fd_gs, sysevent_token_gs, "firewall-restart", "",0);
        }
 #endif
-     v_secure_system("rm -rf /tmp/phylink_wan_state_up");
+       remove("/tmp/phylink_wan_state_up");
    #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
        v_secure_system("sysevent set dhcpv6_client-stop");
    #endif
     }
-	
+
 #if defined (WAN_FAILOVER_SUPPORTED)
 	publishDocsisLinkStatus(false);
-    publishCableModemRfSignalStatus();    
+    publishCableModemRfSignalStatus();
 #endif
-     return;
 }
 
 static void get_dateanduptime(char *buffer, int *uptime)
@@ -2154,10 +2144,11 @@ static int logged_docsis_reg_complete_uptime = 0;
 
 static int GWP_act_DocsisLinkUp_callback()
 {
-     ClbkInfo info = {0};
     int uptime = 0;
     char buffer[64] = {0};
     FILE *fp = NULL;
+    ClbkInfo info = {0};
+
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
 	{
@@ -2228,8 +2219,8 @@ static int GWP_act_DocsisLinkUp_callback()
         v_secure_system("sysevent set wan-start ; sysevent set sshd-restart");
         sleep(50);
         v_secure_system("sysevent set current_ipv4_link_state up");
-        v_secure_system("sysevent set ipv4_wan_ipaddr `ifconfig erouter0 | grep \"inet addr\" | cut -d':' -f2 | awk '{print$1}'`");
-        v_secure_system("sysevent set ipv4_wan_subnet `ifconfig erouter0 | grep \"inet addr\" | cut -d':' -f4 | awk '{print$1}'`");
+        v_secure_system("sysevent set ipv4_wan_ipaddr `ifconfig erouter0 | grep 'inet addr' | cut -d':' -f2 | awk '{print$1}'`");
+        v_secure_system("sysevent set ipv4_wan_subnet `ifconfig erouter0 | grep 'inet addr' | cut -d':' -f4 | awk '{print$1}'`");
         v_secure_system("sysevent set wan_service-status started");
         v_secure_system("sysevent set bridge_mode `syscfg get bridge_mode`");
     }
@@ -2246,8 +2237,7 @@ static int GWP_act_DocsisLinkUp_callback()
     {
         logged_docsis_reg_complete_uptime = 1;
         get_dateanduptime(buffer,&uptime);
-        fp = fopen("/rdklogs/logs/Consolelog.txt.0", "a+");
-        if (fp)
+        if ((fp = fopen("/rdklogs/logs/Consolelog.txt.0", "a+")))
         {
             fprintf(fp,"%s Docsis_Reg_Complete:%d\n",buffer,uptime);
             OnboardLog("Docsis_Reg_Complete:%d\n",uptime);
@@ -2290,9 +2280,10 @@ static void *GWP_linkstate_threadfunc(void *data)
     int ind = -1;
     char buff[50] = { 0 };
     char previousLinkStatus[10] = "down";
+
     if (!syscfg_get(NULL, "wan_physical_ifname", out_value, outbufsz))
     {
-	rc = strcpy_s(wanPhyName,sizeof(wanPhyName),out_value);
+		rc = strcpy_s(wanPhyName,sizeof(wanPhyName),out_value);
         if(rc != EOK)
         {
             ERR_CHK(rc);
@@ -2317,6 +2308,7 @@ static void *GWP_linkstate_threadfunc(void *data)
             sleep(5);
             continue;
         }
+
         /* Read the output a line at a time - output it. */
         buff[0] = '\0';
         while (fgets(buff, 50, fp) != NULL)
@@ -2328,7 +2320,7 @@ static void *GWP_linkstate_threadfunc(void *data)
         }
 
         /* close */
-        fclose(fp);           
+        fclose(fp);
         rc = strcmp_s(buff, strlen(buff),(const char *)previousLinkStatus, &ind);
         ERR_CHK(rc);
         if ((!ind) && (rc == EOK))
@@ -2384,7 +2376,7 @@ void GWP_Util_get_shell_output( FILE *fp, char *out, int len )
 {
     char  *p = NULL;
     if ( fp )
-    {   
+    {
         fgets(out, len, fp);
         if ((p = strchr(out, '\n'))) 
         {
@@ -2395,15 +2387,15 @@ void GWP_Util_get_shell_output( FILE *fp, char *out, int len )
 
 /* GWP_UpdateTr069CfgThread() */
 #if !defined(_PLATFORM_RASPBERRYPI_)
-void *GWP_UpdateTr069CfgThread( void *data )
+static void *GWP_UpdateTr069CfgThread( void *data )
 {
 	int 	IsNeedtoProceedFurther    = TRUE;
 
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
 
 	if (data) // unused variable.
-	printf("\n");
-			
+		printf("\n");
+
 	pthread_detach( pthread_self( ) );
 
 	//Check whether TLV binary is present or not
@@ -2417,8 +2409,9 @@ void *GWP_UpdateTr069CfgThread( void *data )
 	if( IsNeedtoProceedFurther )
 	{
 		char	output[ 16 ] = { 0 };
-                FILE *fp = NULL;
+		FILE *fp = NULL;
 		int ret = 0;
+
 		//Get Tr069 process PID
 		fp = v_secure_popen("r","pidof CcspTr069PaSsp");
 		if(fp == NULL)
@@ -2437,7 +2430,7 @@ void *GWP_UpdateTr069CfgThread( void *data )
 		 * Check Tr069 process is running or not. If not then no need to configure TLV data because it will get 
 		 * update during Tr069 process initialization. so break the loop
 		 */
-		if('\0' == output[0])
+		if ('\0' == output[0])
 		{
 			CcspTraceInfo(("%s CcspTr069PaSsp is not running. No need to configure\n", __FUNCTION__));
 			IsNeedtoProceedFurther= FALSE;
@@ -2463,8 +2456,6 @@ void *GWP_UpdateTr069CfgThread( void *data )
 					//Get Tr069 process ready status
 					if( 0 == access( "/var/tmp/tr069paready" , F_OK ) )
 					{
-
-						//char cmd[ 512 ];
 						//Tr069 process is ready to receive DBUS signal. so proceed to set call
 
 						//Wait for 5seconds after system ready signal
@@ -2528,12 +2519,12 @@ void *GWP_UpdateTr069CfgThread( void *data )
 	}
 	
 	CcspTraceInfo((" Exit %s \n", __FUNCTION__));
-return NULL;
+	return NULL;
 }
 #endif
 #if !defined(_PLATFORM_RASPBERRYPI_)
 /**************************************************************************/
-/*! \fn int GWP_act_DocsisCfgfile(SME_APP_T *app, SME_EVENT_T *event);
+/*! \fn void GWP_act_DocsisCfgfile(SME_APP_T *app, SME_EVENT_T *event);
  **************************************************************************
  *  \brief Parse Config File
  *  \param[in] SME Handler params
@@ -2551,7 +2542,7 @@ static void GWP_act_DocsisCfgfile_callback(Char* cfgFile)
 
     //TlvParseStatus_e tlvStatus;
     TlvParsingStatusExtIf_e tlvStatus;
-    CcspTraceInfo(("Entry %s \n",__FUNCTION__));
+    CcspTraceInfo(("Entry %s \n", __FUNCTION__));
     
     if( cfgFile != NULL)
     {
@@ -2638,11 +2629,11 @@ static void GWP_act_DocsisCfgfile_callback(Char* cfgFile)
 
     printf("eSafe Config file \"%s\", parsed completed, status %d\n", cfgFileName, tlvStatus);
     CcspTraceInfo((" eSafe Config file \"%s\", parsed completed, status %d\n", cfgFileName, tlvStatus));
-   
+
 #if !defined(INTEL_PUMA7)
-     GW_UpdateTr069Cfg();
+    GW_UpdateTr069Cfg();
     //Try to update eRouterMode from esafe device
-    eSafeDevice_GetErouterOperationMode((esafeErouterOperModeExtIf_e*)&eRouterMode);
+    eSafeDevice_GetErouterOperationMode((esafeErouterOperModeExtIf_e *)&eRouterMode);
 #endif
 
 	//Start GWP_UpdateTr069CfgThread 
@@ -2673,9 +2664,6 @@ gimReply:
 
     /* Reply to GIM SRN */
     notificationReply_CfgFileForEsafe();
-    
-
-    return;
 }
 
 /**************************************************************************/
@@ -2722,8 +2710,7 @@ static int GWP_act_StartActiveUnprovisioned()
  *  \param[in] SME Handler params
  *  \return 0
 **************************************************************************/
-//static int GWP_act_InactiveBefCfgfile(SME_APP_T *app, SME_EVENT_T *event)
-static int GWP_act_InactiveBefCfgfile()
+static int GWP_act_InactiveBefCfgfile (void)
 {
     /* Update esafe db with router provisioning status*/
     
@@ -2746,37 +2733,34 @@ static int GWP_act_InactiveBefCfgfile()
 }
 
 /**************************************************************************/
-/*! \fn int GWP_act_BefCfgfileEntry(SME_APP_T *app, SME_EVENT_T *event);
+/*! \fn void GWP_act_BefCfgfileEntry (void);
  **************************************************************************
  *  \brief Actions at entry to BefCfgfile
  *  \param[in] SME Handler params
  *  \return 0
 **************************************************************************/
-//static int GWP_act_BefCfgfileEntry_callback(SME_APP_T *app, SME_EVENT_T *event)
-static void GWP_act_BefCfgfileEntry_callback()
+static void GWP_act_BefCfgfileEntry_callback (void)
 {
-    CcspTraceInfo(("Entry %s \n",__FUNCTION__));
+    CcspTraceInfo(("Entry %s \n", __FUNCTION__));
     if (GWP_IsGwEnabled())
     {
-        
-         GWP_act_StartActiveUnprovisioned();
+        GWP_act_StartActiveUnprovisioned();
     }
     else
     {
-        
         GWP_act_InactiveBefCfgfile();
     }
 }
 #endif
 
 /**************************************************************************/
-/*! \fn int GWP_act_DocsisInited(SME_APP_T *app, SME_EVENT_T *event);
+/*! \fn void GWP_act_DocsisInited (void);
  **************************************************************************
  *  \brief Actions when DOCSIS is initialized
  *  \param[in] SME Handler params
  *  \return 0
 **************************************************************************/
-static void GWP_act_DocsisInited_callback()
+static void GWP_act_DocsisInited_callback (void)
 {
     esafeErouterOperModeExtIf_e operMode;
     //DOCSIS_Esafe_Db_Enable_e eRouterModeTmp; 
@@ -2789,7 +2773,7 @@ static void GWP_act_DocsisInited_callback()
     /* Coverity Issue Fix - CID:73933 : UnInitialised variable */
     char soladdrStr[64] = {0};
     int sysevent_bridge_mode = 0;
-    CcspTraceInfo(("Entry %s \n",__FUNCTION__));
+    CcspTraceInfo(("Entry %s \n", __FUNCTION__));
 #if !defined(_PLATFORM_RASPBERRYPI_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
     /* Docsis initialized */
     printf("Got DOCSIS Initialized\n");
@@ -2844,7 +2828,7 @@ static void GWP_act_DocsisInited_callback()
 #else
     bridge_mode = GWP_SysCfgGetInt("bridge_mode");
     eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
-    validate_mode(&bridge_mode,(int *) &eRouterMode);
+    validate_mode(&bridge_mode, (int *) &eRouterMode);
     sysevent_bridge_mode = getSyseventBridgeMode(eRouterMode, bridge_mode);
     active_mode = sysevent_bridge_mode;
 	CcspTraceInfo((" active_mode %d \n", active_mode));
@@ -2889,12 +2873,11 @@ static void GWP_act_DocsisInited_callback()
          /* The eRouter MUST persist its initialization mode across reinitializations.So, assign last known mode*/
        eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
        CcspTraceInfo((" eRouterMode = %d\n", eRouterMode));
-        operMode = eRouterMode;
+       operMode = eRouterMode;
     }
         CcspTraceInfo((" operMode = %d\n", operMode));
     eSafeDevice_SetErouterOperationMode(operMode);
 
-  
    	eSafeDevice_SetServiceIntImpact();
 
     /* Disconnect docsis LB */
@@ -2946,8 +2929,6 @@ static void GWP_act_DocsisInited_callback()
     }
     
     //StartDocsis();
-
-    return ;
 }
 
 
@@ -2958,7 +2939,7 @@ static void GWP_act_DocsisInited_callback()
  *  \param[in] SME Handler params
  *  \return 0
 **************************************************************************/
-static void GWP_act_ProvEntry_callback()
+static void GWP_act_ProvEntry_callback (void)
 {
 #if defined(_PLATFORM_RASPBERRYPI_)
     int uid = 0;
@@ -2978,7 +2959,7 @@ static void GWP_act_ProvEntry_callback()
         return; // return if already EntryCallback Inited.
     }
 #if !defined(_PLATFORM_RASPBERRYPI_)
-    CcspTraceInfo(("Entry %s \n",__FUNCTION__));
+    CcspTraceInfo(("Entry %s \n", __FUNCTION__));
     //v_secure_system("sysevent set lan-start");
    
 /* TODO: OEM to implement swctl apis */
@@ -2995,12 +2976,16 @@ static void GWP_act_ProvEntry_callback()
     }
 #else
     v_secure_system("mkdir -p /nvram");
-    v_secure_system("rm -f /nvram/dnsmasq.leases");
+    remove("/nvram/dnsmasq.leases");
     v_secure_system("syslogd -f /etc/syslog.conf");
 
     //copy files that are needed by CCSP modules
     v_secure_system("cp /usr/ccsp/ccsp_msg.cfg /tmp");
-    v_secure_system("touch /tmp/cp_subsys_ert");
+    FILE * file = fopen("/tmp/cp_subsys_ert", "wb");
+    if (file != NULL)
+        fclose(file);
+    else
+        printf("File /tmp/cp_subsys_ert cannot be created\n");
 
     /* Below link is created because crond is expecting /crontabs/ dir instead of /var/spool/cron/crontabs */
     v_secure_system("ln -s /var/spool/cron/crontabs /");
@@ -3023,27 +3008,22 @@ static void GWP_act_ProvEntry_callback()
        if(rc != EOK)
        {
           ERR_CHK(rc);
-          return -1;
+          return;
        }
        printf("wanPhyName = %s\n", wanPhyName);
     }
     else
     {
-       return -1;
+       return;
     }
 
     v_secure_system("ifconfig eth0 down");
-    rc =  memset_s(command,sizeof(command), 0, sizeof(command));
-    ERR_CHK(rc);
-    sprintf(command, "ip link set eth0 name %s", wanPhyName);
-    printf("****************value of command = %s**********************\n", command);
-    v_secure_system(command);
 
-    rc =  memset_s(command,sizeof(command), 0, sizeof(command));
-    ERR_CHK(rc);
-    sprintf(command, "ifconfig %s up", wanPhyName);
-    printf("************************value of command = %s***********************\n", command);
-    v_secure_system(command);
+    printf("****************value of command = ip link set eth0 name %s**********************\n", wanPhyName);
+    v_secure_system("ip link set eth0 name %s", wanPhyName);
+
+    printf("************************value of command = ifconfig %s up ***********************\n", wanPhyName);
+    v_secure_system("ifconfig %s up", wanPhyName);
 #endif
 #if defined(_PLATFORM_RASPBERRYPI_)
 if( uid == 0 )
@@ -3056,7 +3036,7 @@ if( uid == 0 )
     {
         v_secure_system("sysevent set phylink_wan_state down");
         CcspTraceInfo((" Creating Thread  GWP_sysevent_threadfunc \n"));
-        pthread_create(&sysevent_tid, NULL, GWP_sysevent_threadfunc, NULL); 
+        pthread_create(&sysevent_tid, NULL, GWP_sysevent_threadfunc, NULL);
     }
 #if defined(_PLATFORM_RASPBERRYPI_)
 }
@@ -3136,13 +3116,11 @@ if( uid == 0 )
         fprintf(stderr, "Error in %s: Failed to set %s!\n", __FUNCTION__, BASE_MAC_WLAN_OFFSET_SYSCFG_KEY);
     }
 #endif
-
-    return ;
 }
 
 #if !defined(_PLATFORM_RASPBERRYPI_)
 static void GWP_act_DocsisTftpOk_callback(){
-    CcspTraceInfo(("Entry %s \n",__FUNCTION__));
+    CcspTraceInfo(("Entry %s \n", __FUNCTION__));
     gDocTftpOk = 1;
     if(snmp_inited) {
         
@@ -3150,7 +3128,6 @@ static void GWP_act_DocsisTftpOk_callback(){
             printf("fail to start docsis CFG parsing!!\n");
         }
     }
-    return ;
 }
 
 // static int get_ipv6_addrs() {
@@ -3173,9 +3150,8 @@ static void GWP_act_DocsisTftpOk_callback(){
 #if !defined(INTEL_PUMA7) &&  !defined(_COSA_BCM_ARM_)
 static void LAN_start (void)
 {
-    int ret = 0;
+    int ret = -1;
     CcspTraceInfo((" Entry %s \n", __FUNCTION__));
-
 
     // LAN Start May Be Delayed so refresh modes.
     CcspTraceInfo(("The Previous EROUTERMODE=%d\n",eRouterMode));
@@ -3185,14 +3161,11 @@ static void LAN_start (void)
     CcspTraceInfo(("The Refreshed EROUTERMODE=%d\n",eRouterMode));
     CcspTraceInfo(("The Refreshed BRIDGE MODE=%d\n",bridge_mode));
 
-    ret = -1;
     if (bridge_mode == 0 && eRouterMode != 0) // mipieper - add erouter check for pseudo bridge. Can remove if bridge_mode is forced in response to erouter_mode.
     {
         printf("Utopia starting lan...\n");
         CcspTraceInfo((" Setting lan-start event \n"));
         ret = sysevent_set(sysevent_fd_gs, sysevent_token_gs, "lan-start", "", 0);
-        
-        
     } else {
         // TODO: fix this
         printf("Utopia starting bridge...\n");
@@ -3208,7 +3181,7 @@ static void LAN_start (void)
 
         if ((syscfg_get(NULL, "4_to_6_enabled", buf, sizeof(buf)) == 0) && (strcmp(buf, "1") == 0))
         {
-            CcspTraceInfo((" Setting dslite_enabled event \n"));
+            CcspTraceInfo((" Setting dslite_enabled event\n"));
             sysevent_set(sysevent_fd_gs, sysevent_token_gs, "dslite_enabled", "1", 0);
         }
     }
@@ -3509,12 +3482,12 @@ void RegisterDocsisCallback()
 #if defined (WAN_FAILOVER_SUPPORTED)
 	cmAgentRbusInit();
 	SetDocsisLinkdowSignalfunc(CreateThreadandSendCondSignalToPthread);
-#endif	
+#endif
 
     CcspTraceInfo((" create Gwp callback event handler\n"));
     pthread_create(&Gwp_event_tid, NULL, GWP_EventHandler, NULL);
 
- appCallBack *obj = NULL;
+    appCallBack *obj = NULL;
     obj = (appCallBack*)malloc(sizeof(appCallBack));
 
 #if defined(INTEL_PUMA7) 
@@ -3537,7 +3510,7 @@ void RegisterDocsisCallback()
 #if defined(INTEL_PUMA7)
        obj->pDocsis_GetRATransInterval = (fpDocsisRATransInterval)docsis_GetRATransInterval_callback;
 #endif
-        obj->pGW_Tr069PaSubTLVParse = GW_Tr069PaSubTLVParse;
+       obj->pGW_Tr069PaSubTLVParse = GW_Tr069PaSubTLVParse;
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
 	void* pGW_setTopologyMode = GW_setTopologyMode;
         obj->pGW_SetTopologyMode = (fpGW_SetTopologyMode)pGW_setTopologyMode;
@@ -3548,13 +3521,12 @@ void RegisterDocsisCallback()
 		    GWP_act_DocsisLinkUp_callback(); // Link up
 	    }
 #endif //WAN_FAILOVER_SUPPORTED
-        CcspTraceInfo(("Create event handler\n"));
+        CcspTraceInfo(("Creating Event Handler\n"));
         /* Command line - ignored */
         SME_CreateEventHandler(obj);
         CcspTraceInfo((" Creating Event Handler over\n"));
            /*Coverity Fix CID:80015 RESOURCE_LEAK */
            free(obj);
     } //if(obj != NULL)
-
 }
 #endif
