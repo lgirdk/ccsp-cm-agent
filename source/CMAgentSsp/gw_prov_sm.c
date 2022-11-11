@@ -515,7 +515,7 @@ static int getDecisionErouteOperMode (void)
     /* Get eRouterSnmpInitMode value from HAL */
     cm_hal_Get_ErouterModeControl(&initMode);
 
-    CcspTraceInfo(("%s: esafeErouterInitModeControl is %d, eRouterMode: %d\n", __FUNCTION__, initMode, eRouterMode));
+    GWPROV_PRINT("%s: esafeErouterInitModeControl is %d, eRouterMode: %d\n", __FUNCTION__, initMode, eRouterMode);
 
     //eRouter precendence order: esafeErouterInitModeControl > webUI mode > CM Config
 
@@ -1695,24 +1695,24 @@ static int GWP_IssueCmdWithTimeout (char *cmd, char *respStr, int timeout)
     int retVal = 0;
     int count = 0;
 
-    CcspTraceInfo(("%s: -E-\n", __FUNCTION__));
+    GWPROV_PRINT("%s: -E-\n", __FUNCTION__);
 
     snprintf(cmdBuf, sizeof(cmdBuf), "%s | grep %s", cmd, respStr);
 
-    CcspTraceInfo(("%s: cmd=%s\n", __FUNCTION__, cmdBuf));
+    GWPROV_PRINT("%s: cmd=%s\n", __FUNCTION__, cmdBuf);
 
     while (1)
     {
         if (system(cmdBuf) == 0)
         {
-            CcspTraceInfo(("%s: Command success after %d Secs\n", __FUNCTION__, count));
+            GWPROV_PRINT("%s: Command success after %d Secs\n", __FUNCTION__, count);
             retVal = 0;
             break;
         }
 
         if (++count >= timeout)
         {
-            CcspTraceInfo(("%s: Command fail after %d Secs\n", __FUNCTION__, count));
+            GWPROV_PRINT("%s: Command fail after %d Secs\n", __FUNCTION__, count);
             retVal = -1;
             break;
         }
@@ -1720,7 +1720,7 @@ static int GWP_IssueCmdWithTimeout (char *cmd, char *respStr, int timeout)
         sleep(1);
     }
 
-    CcspTraceInfo(("%s: -X-\n", __FUNCTION__));
+    GWPROV_PRINT("%s: -X-\n", __FUNCTION__);
 
     return retVal;
 }
@@ -2539,11 +2539,11 @@ static void *GWP_sysevent_threadfunc(void *data)
 #endif
                         if (!guest_enable)
                         {
-                            CcspTraceInfo(("%s Skip enabling guest network interface brlan7 during bootup \n", __FUNCTION__));
+                            GWPROV_PRINT("%s Skip enabling guest network interface brlan7 during bootup \n", __FUNCTION__);
                         }
                         else
                         {
-                            CcspTraceInfo(("%s Enable guest network interface brlan7 \n", __FUNCTION__));
+                            GWPROV_PRINT("%s Enable guest network interface brlan7 \n", __FUNCTION__);
                             sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET3_INSTANCE, 0);
                         }
 #ifdef _PUMA6_ARM_
@@ -3119,7 +3119,7 @@ void GWP_Util_get_shell_output( char * cmd, char *out, int len )
     if ( fp )
     {
         if (fgets( buf, sizeof( buf ), fp ) == NULL)
-            CcspTraceInfo(("%s fgets error \n", __FUNCTION__));
+            GWPROV_PRINT("%s fgets error \n", __FUNCTION__);
 
         /*we need to remove the \n char in buf*/
         if ( ( p = strchr( buf, '\n' ) ) )
@@ -3600,7 +3600,7 @@ static void GWP_act_DocsisInited_callback (void)
     getDecisionErouteOperMode();
     sysevent_bridge_mode = getSyseventBridgeMode(eRouterMode, bridge_mode);
     active_mode = sysevent_bridge_mode;
-    CcspTraceInfo((" active_mode %d \n", active_mode));
+    GWPROV_PRINT(" active_mode %d \n", active_mode);
 
 #if defined(_PROPOSED_BUG_FIX_)
 	/* Setting erouter0 MAC address after Docsis Init */
@@ -3654,7 +3654,7 @@ static void GWP_act_DocsisInited_callback (void)
 
     if (eRouterMode == DOCESAFE_ENABLE_DISABLE_extIf)
     {
-        CcspTraceInfo(("erouter is disabled, connecting to DOCSIS local bridge\n"));
+        GWPROV_PRINT("erouter is disabled, connecting to DOCSIS local bridge\n");
         connectLocalBridge(true);
     }
     else
