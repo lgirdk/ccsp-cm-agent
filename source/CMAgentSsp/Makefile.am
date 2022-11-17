@@ -33,16 +33,17 @@ CcspCMAgentSsp_CFLAGS = $(SYSTEMD_CFLAGS)
 CcspCMAgentSsp_CFLAGS += $(WANMGR_CFLAGS)
 
 CcspCMAgentSsp_SOURCES = gw_prov_sm.c ssp_main.c ssp_messagebus_interface.c ssp_action.c dm_pack_datamodel.c
-CcspCMAgentSsp_LDFLAGS = -lccsp_common -lsyscfg -lcm_mgnt -lsecure_wrapper $(SYSTEMD_LDFLAGS) $(WANMGR_LDFLAGS)
+CcspCMAgentSsp_LDFLAGS = -lccsp_common -lsyscfg -lcm_mgnt -lsecure_wrapper $(SYSTEMD_LDFLAGS) -lpthread
 
-CcspCMAgentSsp_DEPENDENCIES = ${top_builddir}/source/TR-181/middle_layer_src/libCcspCMAgent_middle_layer_src.la
-CcspCMAgentSsp_LDADD = $(CcspCMAgentSsp_DEPENDENCIES)
-
-if !PLATFORM_PUMA7_ENABLED
 if FEATURE_RDKB_WAN_MANAGER
+CcspCMAgentSsp_LDFLAGS += -lsysevent -lcimplog -ltelemetry_msgsender -lrt
+if !PLATFORM_PUMA7_ENABLED
 CcspCMAgentSsp_LDFLAGS += -lgwprovappabs
 endif
 endif
+
+CcspCMAgentSsp_DEPENDENCIES = ${top_builddir}/source/TR-181/middle_layer_src/libCcspCMAgent_middle_layer_src.la
+CcspCMAgentSsp_LDADD = $(CcspCMAgentSsp_DEPENDENCIES)
 
 if PLATFORM_PUMA7_ENABLED
 CcspCMAgentSsp_LDFLAGS += -lgwapiproxy -lgwgimproxy -ltlv
