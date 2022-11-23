@@ -104,7 +104,6 @@
 #endif
 
 #ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
-#include <cimplog/cimplog.h>
 #define LOGGING_MODULE           "GWPROV"
 #define OnboardLog(...)          rdk_log_onboard(LOGGING_MODULE, __VA_ARGS__)
 #else
