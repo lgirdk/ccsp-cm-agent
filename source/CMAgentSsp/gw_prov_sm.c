@@ -261,7 +261,7 @@ typedef struct
     eGwpThreadType mType;       
 } GwpThread_MsgItem;
 
-GwpThread_MsgItem gwpthreadMsgArr[] = {
+static const GwpThread_MsgItem gwpthreadMsgArr[] = {
     {"erouter_mode",                               EROUTER_MODE},
     {"ipv4-status",                                IPV4STATUS},
     {"ipv6-status",                                IPV6STATUS},
@@ -408,7 +408,7 @@ static bool IsEthWanEnabled (void)
     return FALSE;
 }
 
-eGwpThreadType Get_GwpThreadType(char *name)
+static eGwpThreadType Get_GwpThreadType(char *name)
 {
     errno_t rc       = -1;
     int     ind      = -1;
