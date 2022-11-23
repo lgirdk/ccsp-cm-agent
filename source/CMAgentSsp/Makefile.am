@@ -36,7 +36,7 @@ CcspCMAgentSsp_SOURCES = gw_prov_sm.c ssp_main.c ssp_messagebus_interface.c ssp_
 CcspCMAgentSsp_LDFLAGS = -lccsp_common -lsyscfg -lcm_mgnt -lsecure_wrapper $(SYSTEMD_LDFLAGS) -lpthread
 
 if FEATURE_RDKB_WAN_MANAGER
-CcspCMAgentSsp_LDFLAGS += -lsysevent -lcimplog -ltelemetry_msgsender -lrt
+CcspCMAgentSsp_LDFLAGS += -lsysevent -ltelemetry_msgsender -lrt
 if !PLATFORM_PUMA7_ENABLED
 CcspCMAgentSsp_LDFLAGS += -lgwprovappabs
 endif
