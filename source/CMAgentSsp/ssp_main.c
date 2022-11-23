@@ -303,7 +303,7 @@ static void _print_stack_backtrace(void)
         int i, count = 0;
 
         int fd;
-        const char* path = "/nvram/CMAgentSsp_backtrace";
+        const char *path = "/nvram/CMAgentSsp_backtrace";
         fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (fd < 0)
         {
@@ -617,7 +617,7 @@ ANSC_STATUS CosaDmlGetWanInstance(CHAR *pIfName, INT *pInstanceNumber)
     return ANSC_STATUS_SUCCESS;
 }
 
-static void checkComponentHealthStatus(char * compName, char * dbusPath, char *status, int *retStatus)
+static void checkComponentHealthStatus(char *compName, char *dbusPath, char *status, int *retStatus)
 {
     int ret = 0, val_size = 0;
     parameterValStruct_t **parameterval = NULL;
@@ -829,7 +829,7 @@ static bool drop_root()
 }
 #endif
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     int                             cmdChar            = 0;
     BOOL                            bRunAsDaemon       = TRUE;
