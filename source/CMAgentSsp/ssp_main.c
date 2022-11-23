@@ -89,8 +89,8 @@ static cap_user appcaps;
 
 typedef struct _WAN_PARAM_INFO
 {
-    CHAR paramName[256];
-    CHAR paramValue[256];
+    char paramName[256];
+    char paramValue[256];
     enum dataType_e paramType;
 }WAN_PARAM_INFO;
 
@@ -106,8 +106,8 @@ enum WANBOOTINFORM_MSG
 typedef struct _WAN_BOOTINFORM_MSG
 {
     WAN_PARAM_INFO param[MSG_TOTAL_NUM];
-    INT iNumOfParam;
-    INT iWanInstanceNumber;
+    int iNumOfParam;
+    int iWanInstanceNumber;
 }WAN_BOOTINFORM_MSG;
 /**
  * @defgroup CM_AGENT CM Agent
@@ -129,7 +129,7 @@ PCCSP_COMPONENT_CFG             gpPnmStartCfg           = NULL;
 PCCSP_FC_CONTEXT                pPnmFcContext           = (PCCSP_FC_CONTEXT           )NULL;
 PCCSP_CCD_INTERFACE             pPnmCcdIf               = (PCCSP_CCD_INTERFACE        )NULL;
 PCCC_MBI_INTERFACE              pPnmMbiIf               = (PCCC_MBI_INTERFACE         )NULL;
-BOOL                            g_bActive               = FALSE;
+BOOL                            g_bActive               = false;
 
 #ifdef ENABLE_RDK_WANMANAGER
 static pthread_t docsisclbk_tid;
@@ -198,7 +198,7 @@ int  cmd_dispatch(int  command)
                 ssp_create_pnm(gpPnmStartCfg);
                 ssp_engage_pnm(gpPnmStartCfg);
 
-                g_bActive = TRUE;
+                g_bActive = true;
 
                 CcspTraceInfo(("CM Agent Module loaded successfully...\n"));
 
@@ -551,11 +551,11 @@ ANSC_STATUS CosaDmlGetParamValues(char *pComponent, char *pBus, char *pParamName
     return ANSC_STATUS_FAILURE;
 }
 
-ANSC_STATUS CosaDmlGetWanInstance(CHAR *pIfName, INT *pInstanceNumber)
+ANSC_STATUS CosaDmlGetWanInstance(char *pIfName, int *pInstanceNumber)
 {
     char acTmpReturnValue[256] = {0};
-    INT iLoopCount = 0;
-    INT iTotalNoofEntries = 0;
+    int iLoopCount = 0;
+    int iTotalNoofEntries = 0;
 
 
     if (NULL == pInstanceNumber|| NULL == pIfName)
@@ -660,19 +660,19 @@ static void waitForWanMgrComponentReady()
     }
 }
 
-INT InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
+int InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
 {
-    BOOL bEthWanEnable = FALSE;
-    CHAR wanName[64];
-    CHAR out_value[64];
-    CHAR acSetParamName[256];
-    INT iWANInstance = 0;
+    BOOL bEthWanEnable = false;
+    char wanName[64];
+    char out_value[64];
+    char acSetParamName[256];
+    int iWANInstance = 0;
 
     if (!pMsg)
         return -1;
     if ( 0 == access( "/nvram/ETHWAN_ENABLE" , F_OK ) )
     {
-        bEthWanEnable = TRUE;
+        bEthWanEnable = true;
     }
 
     memset(out_value,0,sizeof(out_value));
@@ -714,7 +714,7 @@ INT InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
 
     pMsg->param[MSG_WAN_NAME].paramType = ccsp_string;
 
-    if (bEthWanEnable == TRUE)
+    if (bEthWanEnable == true)
     {
         strncpy(pMsg->param[MSG_WAN_NAME].paramValue,WAN_PHYIF_DOCSIS_NAME,sizeof(pMsg->param[MSG_WAN_NAME].paramValue));
     }
@@ -752,15 +752,15 @@ INT InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
 void* ThreadBootInformMsg(void *arg)
 {
     WAN_BOOTINFORM_MSG msg = {0};
-    INT retryMax = 60;
-    INT retryCount = 0;
-    BOOL retryBootInform = FALSE;
+    int retryMax = 60;
+    int retryCount = 0;
+    BOOL retryBootInform = false;
     pthread_detach(pthread_self());
     waitForWanMgrComponentReady();
     InitBootInformInfo(&msg);
     while (1)
     {
-        INT index = 0;
+        int index = 0;
         for (index = 0; index < msg.iNumOfParam; ++index)
         {
             ANSC_STATUS ret = SendMsg(
@@ -769,14 +769,14 @@ void* ThreadBootInformMsg(void *arg)
                     msg.param[index].paramName,
                     msg.param[index].paramValue,
                     msg.param[index].paramType,
-                    TRUE);
+                    true);
             if (ret == ANSC_STATUS_FAILURE)
             {
-                retryBootInform = TRUE;
+                retryBootInform = true;
                 break;
             }
         }
-        if (FALSE == retryBootInform)
+        if (!retryBootInform)
         {
             break;
         }
@@ -820,7 +820,7 @@ static bool drop_root()
 int main(int argc, char *argv[])
 {
     int                             cmdChar            = 0;
-    BOOL                            bRunAsDaemon       = TRUE;
+    BOOL                            bRunAsDaemon       = true;
     int                             idx                = 0;
     char                            cmd[1024]          = {0};
     FILE                           *fd                 = NULL;
@@ -885,7 +885,7 @@ int main(int argc, char *argv[])
            ERR_CHK(rc);
            if((!ind) && (rc == EOK))
           {
-            bRunAsDaemon = FALSE;
+            bRunAsDaemon = false;
           }
        }
 
@@ -1018,7 +1018,7 @@ int main(int argc, char *argv[])
     {
         ssp_cancel_pnm(gpPnmStartCfg);
 
-        g_bActive = FALSE;
+        g_bActive = false;
     }
 
     return 0;
