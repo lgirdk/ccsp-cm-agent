@@ -403,12 +403,12 @@ static bool IsEthWanEnabled (void)
         {
             if (strcmp(buf, "true") == 0)
             {
-                return TRUE;
+                return true;
             }
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static eGwpThreadType Get_GwpThreadType(char *name)
@@ -544,7 +544,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 		tlvObject=malloc(sizeof(Tr69TlvData));
 		if(tlvObject == NULL)
 		{
-			return FALSE;
+			return false;
 		}
         rc =  memset_s(tlvObject,sizeof(Tr69TlvData), 0, sizeof(Tr69TlvData));
         ERR_CHK(rc);
@@ -556,8 +556,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 	if(ret == 0)
 	{
 		/* Need to create default values during fresh boot-up case*/
-		tlvObject->FreshBootUp = TRUE;
-		tlvObject->Tr69Enable = FALSE;
+		tlvObject->FreshBootUp = true;
+		tlvObject->Tr69Enable = false;
 		FILE * file= fopen(TR69_TLVDATA_FILE, "wb");
 		if (file != NULL)
 		{
@@ -581,10 +581,10 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 	{
 		printf("TLV data file can't be opened \n");
 		GWPROV_PRINT(" TLV data file can't be opened \n");
-		return FALSE;
+		return false;
 	}
 
-	if(tlvObject->FreshBootUp == TRUE)
+	if(tlvObject->FreshBootUp == true)
 	{
 		GWPROV_PRINT(" Fresh Bootup \n");
 		switch (typeOfTLV)
@@ -599,7 +599,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return false;
                 }
                 break;
             case GW_SUBTLV_TR069_USERNAME_EXTIF:
@@ -620,14 +620,14 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 	{
 		/*In case of Normal bootup*/
 		GWPROV_PRINT(" Normal Bootup \n");
-		tlvObject->FreshBootUp = FALSE;
+		tlvObject->FreshBootUp = false;
 		switch (typeOfTLV)
 		{
             case GW_SUBTLV_TR069_ENABLE_CWMP_EXTIF:
                 tlvObject->EnableCWMP = gwTlvsLocalDB.tlv2.EnableCWMP;
                 break;
             case GW_SUBTLV_TR069_URL_EXTIF:
-                if(tlvObject->Tr69Enable == FALSE)
+                if(tlvObject->Tr69Enable == false)
                 {
                     // This is to make sure that we always use boot config supplied URL
                     // during TR69 initialization
@@ -637,7 +637,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     if(rc != EOK)
                     {
                         ERR_CHK(rc);
-                        return FALSE;
+                        return false;
                     }
                 }
                 break;
@@ -663,7 +663,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 		fclose(file);
 	}
 	
-return TRUE;
+return true;
 }
 
 static void GW_Tr069PaSubTLVParse(unsigned char type, unsigned short length, const unsigned char *value)
@@ -820,7 +820,7 @@ static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, 
     if(rc != EOK)
     {
         ERR_CHK(rc);
-        return FALSE;
+        return false;
     }
     current += 12;  
     *(current++) = sub_oid;
@@ -831,7 +831,7 @@ static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, 
     *(mark-1) = (unsigned char)(current - mark);
 
     *cur = current;
-	return TRUE;
+	return true;
 }
 
 static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, unsigned char *value)
@@ -846,7 +846,7 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
     if(rc != EOK)
     {
         ERR_CHK(rc);
-        return FALSE;
+        return false;
     }
     current += 12;  
     *(current++) = sub_oid;
@@ -859,14 +859,14 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
         if(rc != EOK)
         {
            ERR_CHK(rc);
-           return FALSE;
+           return false;
         }
         current += *(current-1);
     }
     *(mark-1) = (unsigned char)(current - mark);
 
     *cur = current;
-	return TRUE;
+	return true;
 }
 
 static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
@@ -1274,7 +1274,7 @@ static void GWP_EnterRouterMode(void)
     
     v_secure_system("sysevent set forwarding-restart");
 #if !defined(INTEL_PUMA7)
-    sendPseudoBridgeModeMessage(FALSE);
+    sendPseudoBridgeModeMessage(false);
 #endif
 }
 
@@ -1329,7 +1329,7 @@ static void GWP_EnterBridgeMode(void)
 
     v_secure_system("sysevent set forwarding-restart");
 #if !defined(INTEL_PUMA7)
-    sendPseudoBridgeModeMessage(TRUE);
+    sendPseudoBridgeModeMessage(true);
 #endif
 }
 
@@ -1357,7 +1357,7 @@ char MocaStatus[16] = {0};
     v_secure_system("sysevent set bridge_mode %d", BRMODE_PRIMARY_BRIDGE);
     v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.ErouterEnable bool false");
     v_secure_system("sysevent set forwarding-restart");
-    sendPseudoBridgeModeMessage(TRUE);
+    sendPseudoBridgeModeMessage(true);
 }
 #endif
 
@@ -1448,7 +1448,7 @@ static void GWP_UpdateERouterMode(void)
         }
     }
 #if !defined(INTEL_PUMA7)
-    sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? TRUE : FALSE);
+    sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? true : false);
 #endif
 }
 
@@ -1935,7 +1935,7 @@ static void *GWP_sysevent_threadfunc(void *data)
            GWPROV_PRINT(" %s : name = %s, val = %s \n", __FUNCTION__, name, val);
             eGwpThreadType ret_value;
             ret_value = Get_GwpThreadType(name);
-            if (TRUE == IsEthWanEnabled())
+            if (true == IsEthWanEnabled())
             {
                 if (ret_value == SYSTEM_RESTART)
                 {
@@ -2059,7 +2059,7 @@ static void GWP_act_DocsisLinkDown_callback_1()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (true == IsEthWanEnabled())
     {
         return;
     }
@@ -2083,7 +2083,7 @@ static void GWP_act_DocsisLinkDown_callback_2()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (true == IsEthWanEnabled())
     {
         return;
     }
@@ -2156,7 +2156,7 @@ static int GWP_act_DocsisLinkUp_callback()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (true == IsEthWanEnabled())
     {
         return -1;
     }
@@ -2253,7 +2253,7 @@ static int GWP_act_DocsisLinkUp_callback()
         active_mode = getSyseventBridgeMode(eRouterMode, GWP_SysCfgGetInt("bridge_mode"));
         printf("***** active mode: %d\n", active_mode);
         #if !defined(INTEL_PUMA7)
-	sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? TRUE : FALSE);
+	sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? true : false);
 	#endif
     }
 #endif
@@ -2388,7 +2388,7 @@ void GWP_Util_get_shell_output( FILE *fp, char *out, int len )
 #if !defined(_PLATFORM_RASPBERRYPI_)
 static void *GWP_UpdateTr069CfgThread( void *data )
 {
-	int 	IsNeedtoProceedFurther    = TRUE;
+	int 	IsNeedtoProceedFurther    = true;
 
 	GWPROV_PRINT(" Entry %s \n", __FUNCTION__);
 
@@ -2401,7 +2401,7 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 	if( 0 == IsFileExists( TR69_TLVDATA_FILE ) )
 	{
 		GWPROV_PRINT(" %s file not present \n", TR69_TLVDATA_FILE );
-		IsNeedtoProceedFurther = FALSE;
+		IsNeedtoProceedFurther = false;
 	}
 
 	//Proceed Further
@@ -2432,7 +2432,7 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 		if ('\0' == output[0])
 		{
 			GWPROV_PRINT("%s CcspTr069PaSsp is not running. No need to configure\n", __FUNCTION__);
-			IsNeedtoProceedFurther= FALSE;
+			IsNeedtoProceedFurther= false;
 		}
 		else
 		{
@@ -2467,12 +2467,12 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 					
 						/*
 						  * Set the URL parameter
-						  * When FreshBootUp == TRUE
-						  * When FreshBootUp == FALSE && 	Tr69Enable == FALSE					  
+						  * When FreshBootUp == true
+						  * When FreshBootUp == false && 	Tr69Enable == false					  
 						  */
 						
-						if( ( TRUE == tlvObject->FreshBootUp ) || \
-							(( FALSE == tlvObject->FreshBootUp ) && ( tlvObject->Tr69Enable == FALSE ))
+						if( ( true == tlvObject->FreshBootUp ) || \
+							(( false == tlvObject->FreshBootUp ) && ( tlvObject->Tr69Enable == false ))
 						  )
 						{
 							if( '\0' != tlvObject->URL[ 0 ] )
@@ -2480,9 +2480,9 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 								v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s ", tlvObject->URL);
 							}
 
-							if (TRUE == tlvObject->FreshBootUp)
+							if (true == tlvObject->FreshBootUp)
 							{
-								tlvObject->FreshBootUp = FALSE;
+								tlvObject->FreshBootUp = false;
 								FILE *TLVDataFile = fopen(TR69_TLVDATA_FILE, "wb");
 								if (TLVDataFile != NULL)
 								{
@@ -2511,7 +2511,7 @@ static void *GWP_UpdateTr069CfgThread( void *data )
 			}
 			else
 			{
-				IsNeedtoProceedFurther = FALSE;
+				IsNeedtoProceedFurther = false;
 				GWPROV_PRINT("%s CcspTr069PaSsp might be parsed %s file\n", __FUNCTION__, TR69_TLVDATA_FILE );
 			}
 		}
@@ -2766,8 +2766,8 @@ static void GWP_act_DocsisInited_callback (void)
 #if !defined(_PLATFORM_RASPBERRYPI_)
     DOCSIS_Esafe_Db_extIf_e eRouterModeTmp;
 #endif
-    unsigned char lladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN / sizeof(unsigned char) ] = {0};
-    unsigned char soladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN / sizeof(unsigned char) ] = {0};
+    unsigned char lladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN ] = {0};
+    unsigned char soladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN ] = {0};
     char soladdrKey[64] = { 0 };
     /* Coverity Issue Fix - CID:73933 : UnInitialised variable */
     char soladdrStr[64] = {0};
@@ -2882,7 +2882,7 @@ static void GWP_act_DocsisInited_callback (void)
     /* Disconnect docsis LB */
     printf("Disconnecting DOCSIS local bridge\n");
         GWPROV_PRINT(" Disconnecting DOCSIS local bridge\n");
-    connectLocalBridge(FALSE);
+    connectLocalBridge(false);
 
     /* This is an SRN, reply */
     printf("Got Docsis INIT - replying\n");
@@ -3309,7 +3309,7 @@ void *GWP_EventHandler(void *arg)
         }
         v_secure_system("dmcli eRT setv %s string %s true",WAN_INTERFACE_PHY_STATUS_PARAM_NAME,paramValue);
  
-        //CosaDmlSetParamValues(/*WAN_COMPONENT_NAME*/"eRT.com.cisco.spvtg.ccsp.lmlite", /*WAN_DBUS_PATH*/"/com/cisco/spvtg/ccsp/lmlite", paramName, paramValue, ccsp_string, TRUE);
+        //CosaDmlSetParamValues(/*WAN_COMPONENT_NAME*/"eRT.com.cisco.spvtg.ccsp.lmlite", /*WAN_DBUS_PATH*/"/com/cisco/spvtg/ccsp/lmlite", paramName, paramValue, ccsp_string, true);
 
     } while(1);
    pthread_exit(NULL);
@@ -3490,7 +3490,7 @@ void RegisterDocsisCallback()
     obj = (appCallBack*)malloc(sizeof(appCallBack));
 
 #if defined(INTEL_PUMA7) 
-    if (TRUE == IsEthWanEnabled())
+    if (true == IsEthWanEnabled())
     {
         GWP_act_ProvEntry_callback();
     }
