@@ -593,7 +593,6 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 	errno_t rc = -1;
 	FILE *fp_acs;
 	int isTr069Started = 0;
-	char cmd[1024];
 
 	GWPROV_PRINT(" Entry %s : typeOfTLV %d \n", __FUNCTION__, typeOfTLV);
 	
@@ -652,9 +651,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 tlvObject->EnableCWMP = gwTlvsLocalDB.tlv2.EnableCWMP;
                 if(isTr069Started)
                 {
-                    snprintf(cmd, sizeof(cmd), "dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool  %d &",tlvObject->EnableCWMP);
-                    system(cmd);
-                    CcspTraceInfo((" %s \n",cmd));
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool %d &",tlvObject->EnableCWMP);
+                    GWPROV_PRINT("dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool %d &",tlvObject->EnableCWMP);
                 }
                 break;
             case GW_SUBTLV_TR069_URL_EXTIF:
@@ -685,9 +683,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 // Set dmcli if Tr069 is started
                 if(isTr069Started)
                 {
-                    snprintf(cmd, sizeof(cmd), "dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
-                    system(cmd);
-                    CcspTraceInfo((" %s \n",cmd));
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
+                    GWPROV_PRINT("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
                 }
                 break;
             case GW_SUBTLV_TR069_USERNAME_EXTIF:
@@ -696,8 +693,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 // Set dmcli if Tr069 is started
                 if(isTr069Started)
                 {
-                    sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
-                    system(cmd);
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
                 }
                 break;
             case GW_SUBTLV_TR069_PASSWORD_EXTIF:
@@ -706,8 +702,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 // Set dmcli if Tr069 is started
                 if(isTr069Started)
                 {
-                    sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
-                    system(cmd);
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
                 }
                 break;
             case GW_SUBTLV_TR069_CONNREQ_USERNAME_EXTIF:
@@ -716,8 +711,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 // Set dmcli if Tr069 is started
                 if(isTr069Started)
                 {
-                    sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
-                    system(cmd);
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
                 }
                 break;
             case GW_SUBTLV_TR069_CONNREQ_PASSWORD_EXTIF:
@@ -726,8 +720,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 // Set dmcli if Tr069 is started
                 if(isTr069Started)
                 {
-                    sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
-                    system(cmd);
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
                 }
                 break;
             case GW_SUBTLV_TR069_ACS_OVERRIDE_EXTIF:
@@ -735,8 +728,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 
                 if(isTr069Started)
                 {
-                    sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ACSOverride bool  %d &",tlvObject->AcsOverRide);
-                    system(cmd);
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.ACSOverride bool  %d &",tlvObject->AcsOverRide);
                 }
                 break;
             default:
@@ -767,8 +759,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 			if(isTr069Started)
 			{
 				// Need to be revisited 
-				snprintf(cmd, sizeof(cmd), "dmcli eRT setvalues Device.ManagementServer.URL string %s &", tlvObject->URL);
-				system(cmd);
+				v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
 			}
 		}
 
@@ -780,9 +771,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 tlvObject->EnableCWMP = gwTlvsLocalDB.tlv2.EnableCWMP;
                 if(isTr069Started)
                 {
-                    snprintf(cmd, sizeof(cmd),"dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool  %d &",tlvObject->EnableCWMP);
-                    system(cmd);
-                    CcspTraceInfo((" %s \n",cmd));
+                    v_secure_system("dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool %d &",tlvObject->EnableCWMP);
+                    GWPROV_PRINT("dmcli eRT setvalues Device.ManagementServer.EnableCWMP bool %d &",tlvObject->EnableCWMP);
                 }
                 break;
             case GW_SUBTLV_TR069_URL_EXTIF:
@@ -820,9 +810,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     // Set dmcli if Tr069 is started
                     if(isTr069Started)
                     {
-                        snprintf(cmd, sizeof(cmd), "dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
-                        system(cmd);
-                        CcspTraceInfo((" %s \n",cmd));
+                        v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
+                        GWPROV_PRINT("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
                     }
                 }
                 break;
@@ -834,8 +823,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     // Set dmcli if Tr069 is started
                     if(isTr069Started)
                     {
-                        sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
-                        system(cmd);
+                        v_secure_system("dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
                     }
                 }
                 break;
@@ -847,8 +835,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     // Set dmcli if Tr069 is started
                     if(isTr069Started)
                     {
-                        sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
-                        system(cmd);
+                        v_secure_system("dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
                     }
                 }
                 break;
@@ -860,8 +847,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     // Set dmcli if Tr069 is started
                     if(isTr069Started)
                     {
-                        sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
-                        system(cmd);
+                        v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
                     }
                 }
                 break;
@@ -873,8 +859,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     // Set dmcli if Tr069 is started
                     if(isTr069Started)
                     {
-                        sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
-                        system(cmd);
+                        v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
                     }
                 }
                 break;
@@ -888,8 +873,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
                         }
                     }
                     if (gwTlvsLocalDB.tlv2_flags.Username_modified)
@@ -898,8 +882,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.Username string %s &",tlvObject->Username);
                         }
                     }
                     if (gwTlvsLocalDB.tlv2_flags.Password_modified)
@@ -908,8 +891,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.Password string %s &",tlvObject->Password);
                         }
                     }
                     if (gwTlvsLocalDB.tlv2_flags.ConnectionRequestUsername_modified)
@@ -918,8 +900,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestUsername string %s &",tlvObject->ConnectionRequestUsername);
                         }
                     }
                     if (gwTlvsLocalDB.tlv2_flags.ConnectionRequestPassword_modified)
@@ -928,8 +909,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.ConnectionRequestPassword string %s &",tlvObject->ConnectionRequestPassword);
                         }
                     }
                 }
@@ -941,8 +921,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                         // Set dmcli if Tr069 is started
                         if(isTr069Started)
                         {
-                            sprintf(cmd, "dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
-                            system(cmd);
+                            v_secure_system("dmcli eRT setvalues Device.ManagementServer.URL string %s &",tlvObject->URL);
                         }
                     }
                 }
