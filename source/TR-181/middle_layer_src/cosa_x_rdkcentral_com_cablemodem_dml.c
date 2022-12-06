@@ -72,6 +72,7 @@
 #include "cosa_x_rdkcentral_com_cablemodem_dml.h"
 #include "cosa_x_rdkcentral_com_cablemodem_internal.h"
 #include "safec_lib_common.h"
+#include "cosa_cm_common.h"
 
 /***********************************************************************
  IMPORTANT NOTE:
@@ -1418,3 +1419,67 @@ X_RDK_CableModem_GetParamUlongValue
     return FALSE;
 }
 #endif /* * _CM_HIGHSPLIT_SUPPORTED_ */
+
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        X_RDKCENTRAL-COM_CableModem_GetParamBoolValue
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                BOOL*                       pBool
+            );
+
+    description:
+
+        This function is called to retrieve Boolean parameter value; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                BOOL*                       pBool
+                The buffer of returned boolean value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+X_RDKCENTRAL_COM_CableModem_GetParamBoolValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        BOOL*                       pBool
+    )
+{
+    UNREFERENCED_PARAMETER(hInsContext);
+    PCOSA_DATAMODEL_RDKCENTRAL_CABLEMODEM      pMyObject = (PCOSA_DATAMODEL_RDKCENTRAL_CABLEMODEM)g_pCosaBEManager->hRDKCM;
+
+	if( AnscEqualString(ParamName, "LLD_Active", TRUE))
+	{
+		char result_buf[32];
+
+		memset(result_buf, 0, sizeof(result_buf));
+		if(0 != commonSyseventGet(LLD_ACTIVE_STATUS_SYSEVENT, result_buf, sizeof(result_buf))) {
+			AnscTraceWarning(("%s sysevent get failed.\n", __FUNCTION__));
+			return FALSE;
+		}
+		
+		if (0 != strncmp(result_buf, "true", 4)) {
+			pMyObject->LLDActiveStatus = FALSE;
+		}
+		else {
+			pMyObject->LLDActiveStatus = TRUE;
+		}
+        *pBool = pMyObject->LLDActiveStatus;
+		return TRUE;
+	}
+    return FALSE;
+}

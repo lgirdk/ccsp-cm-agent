@@ -88,6 +88,7 @@
     ULONG										CMStatusofUsChannelUpdateTime;						 \
     ULONG                           			CMStatusofUsChannelTotalNumbers;                         \
     PCOSA_X_RDKCENTRAL_COM_CMSTATUSOFDMA_US 	pCMStatusofUsChannel;                                   \
+	BOOL										LLDActiveStatus;						 \
 
 typedef  struct 
 _COSA_DATAMODEL_RDKCENTRAL_CABLDMODEM_CLASS_CONTENT

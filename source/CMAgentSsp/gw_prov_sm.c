@@ -86,7 +86,9 @@
 #include <mqueue.h>
 #include <telemetry_busmessage_sender.h>
 #include "safec_lib_common.h"
-
+#if defined(ENABLE_LLD_SUPPORT) 
+#include "cm_hal.h"
+#endif
 #if defined(_XB6_PRODUCT_REQ_) || defined(_CBR2_PRODUCT_REQ_)
 #include "platform_hal.h"
 #endif
@@ -95,6 +97,7 @@
 #define PORT 8081
 #endif
 
+#include "cosa_cm_common.h"
 #if defined (WAN_FAILOVER_SUPPORTED)
 #include "cosa_rbus_handler_apis.h"
 #endif
@@ -222,7 +225,6 @@ typedef struct _GwTlvsLocalDB
 #define BRG_INST_SIZE 5
 #define BUF_SIZE 256
 #endif
-
 #if defined(INTEL_PUMA7)
 extern CLIENT* Cgm_GatewayApiProxy_Init(void);
 #else
@@ -315,6 +317,8 @@ void set_time(uint32_t TimeSec);
 void CreateDocsisLinkDown_TestFile();
 void CreateThreadandSendCondSignalToPthread();
 #endif //WAN_FAILOVER_SUPPORTED
+
+void Low_latency_docsis_status_check(void);
 /**************************************************************************/
 /*      LOCAL VARIABLES:                                                  */
 /**************************************************************************/
@@ -354,7 +358,6 @@ static int active_mode = BRMODE_ROUTER;
 
 static GwTlvsLocalDB_t gwTlvsLocalDB;
 static pthread_t Gwp_event_tid;
-
 #if defined (INTEL_PUMA7)
 //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
 static int sIPv4_acquired = 0;
@@ -2166,7 +2169,8 @@ static int GWP_act_DocsisLinkUp_callback()
     if (TRUE == IsEthWanEnabled())
     {
         return -1;
-    } 
+    }
+
     phylink_wan_state = 1;
     CcspTraceInfo(("Entry %s \n",__FUNCTION__));
     info.eventType = EVENT_GWP_LINK_UP;
@@ -2254,6 +2258,9 @@ static int GWP_act_DocsisLinkUp_callback()
     {
         int active_mode;
         sleep(10); /* wait for DOCSIS link to be up coompletely */
+        #if defined(ENABLE_LLD_SUPPORT)
+        Low_latency_docsis_status_check();
+        #endif
         active_mode = getSyseventBridgeMode(eRouterMode, GWP_SysCfgGetInt("bridge_mode"));
         printf("***** active mode: %d\n", active_mode);
         #if !defined(INTEL_PUMA7)
@@ -3449,6 +3456,43 @@ void *WAN_Failover_Simulation(void *arg)
 	return arg;
 }
 #endif //WAN_FAILOVER_SUPPORTED
+
+#if defined(ENABLE_LLD_SUPPORT)
+void Low_latency_docsis_status_check(void)
+{
+    int LLD_Active_status;
+    static int Prev_LLD_Active_status=RETURN_ERR;
+    char sysevent_lld_Status_buf[32]="\0";
+    LLD_Active_status=docsis_LLDgetEnableStatus();
+    CcspTraceInfo(("%s : docsis_LLDgetEnableStatus returned %d, Prev_LLD_Active_status is %d\n",__FUNCTION__,LLD_Active_status,Prev_LLD_Active_status));
+    if(LLD_Active_status != Prev_LLD_Active_status)
+    {
+        sysevent_get(sysevent_fd_gs, sysevent_token_gs, LLD_ACTIVE_STATUS_SYSEVENT, sysevent_lld_Status_buf, sizeof(sysevent_lld_Status_buf));
+        CcspTraceInfo(("LLDActiveStatus sysevent is:%s\n",sysevent_lld_Status_buf));
+
+        if(LLD_Active_status == ENABLE) 
+        {
+            CcspTraceInfo(("LLD is enabled. Setting LLD active status as true.\n"));
+            commonSyseventSet(LLD_ACTIVE_STATUS_SYSEVENT, "true");
+            CcspTraceInfo(("%s Triggering firewall-restart\n",__FUNCTION__));
+            commonSyseventSet("firewall-restart", "");
+        }
+        else
+        {
+            CcspTraceInfo(("LLD is disabled. Setting LLD active status as false.\n"));
+            commonSyseventSet(LLD_ACTIVE_STATUS_SYSEVENT, "false");
+
+            if ( Prev_LLD_Active_status == ENABLE )
+            {
+                CcspTraceInfo(("%s Triggering firewall-restart\n",__FUNCTION__));
+                commonSyseventSet("firewall-restart", "");  
+            }
+        }
+        Prev_LLD_Active_status=LLD_Active_status;
+    }
+    CcspTraceInfo((" Exit %s \n",__FUNCTION__));
+}
+#endif
 
 void RegisterDocsisCallback()
 {
