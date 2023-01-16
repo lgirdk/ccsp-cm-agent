@@ -1393,7 +1393,16 @@ X_CISCO_COM_CableModem_SetParamBoolValue
         pWanCfg->Upstream = bValue;
         if (bValue)
         {
-            v_secure_system("brctl addbr erouter0; ifconfig erouter0 up; brctl addif erouter0 lbr0");
+            char base_mac[18];
+            if (syscfg_get(NULL, "base_mac_address", base_mac, sizeof(base_mac)) != 0)
+            {
+                CcspTraceWarning(("syscfg fail: base_mac_address\n"));
+                v_secure_system("brctl addbr erouter0; ifconfig erouter0 up; brctl addif erouter0 lbr0");
+            }
+            else
+            {
+                v_secure_system("brctl addbr erouter0; ifconfig erouter0 hw ether %s; ifconfig erouter0 up; brctl addif erouter0 lbr0", base_mac);
+            }
             v_secure_system("dmcli eRT setv Device.X_RDK_WanManager.CPEInterface.1.Wan.Name string erouter0 &");
             sleep(1);
             v_secure_system("dmcli eRT setv Device.X_RDK_WanManager.CPEInterface.1.Wan.LinkStatus string Up &");
