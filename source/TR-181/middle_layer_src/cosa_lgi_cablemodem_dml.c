@@ -746,8 +746,7 @@ BOOL LgiOfdmaChannel_GetParamUlongValue ( ANSC_HANDLE hInsContext, char *ParamNa
 
     if (strcmp(ParamName, "LockStatus") == 0)
     {
-        /*LockStatus[]: {"FAIL", "RANGING", "SUCCESS", "RANGING" }*/
-        *puLong = (pConf->lockStatus == 2) ? 1 : 0;
+        *puLong = pConf->lockStatus;
         return TRUE;
     }
 
