@@ -980,9 +980,9 @@ CosaDmlCmGetDocsisLog
         return ANSC_STATUS_FAILURE;
     }
     for(i=0;i<count;i++) {
-     if (entries[i].docsDevEvFirstTime.tv_sec == 0 )
+     if (entries[i].docsDevEvLastTime.tv_sec == 0 )
       continue;
-        rc =   memcpy_s(p[cnt].Time,sizeof(p[cnt].Time), ctime(&(entries[i].docsDevEvFirstTime.tv_sec)), sizeof(p[cnt].Time));
+        rc =   memcpy_s(p[cnt].Time,sizeof(p[cnt].Time), ctime(&(entries[i].docsDevEvLastTime.tv_sec)), sizeof(p[cnt].Time));
          if(rc != EOK)
          {
             ERR_CHK(rc);
