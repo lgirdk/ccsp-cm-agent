@@ -979,7 +979,7 @@ CosaDmlCmGetDocsisLog
         AnscTraceWarning(("ReAllocateMemory error %s, %d\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
     }
-    for(i=0;i<count;i++) {
+    for(i=(count-1);i>=0;i--) {
      if (entries[i].docsDevEvFirstTime.tv_sec == 0 )
       continue;
         rc =   memcpy_s(p[cnt].Time,sizeof(p[cnt].Time), ctime(&(entries[i].docsDevEvFirstTime.tv_sec)), sizeof(p[cnt].Time));
