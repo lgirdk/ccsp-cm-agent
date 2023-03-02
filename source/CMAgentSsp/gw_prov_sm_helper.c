@@ -1000,30 +1000,6 @@ static bool check_alias(char * cmd_output, char * alias)
     }
     return success;
 }
-/**************************************************************************/
-/*! \fn bool is_customer_data_model()
- **************************************************************************
- *  \brief Check whether customer data-model is in place
- *  \return true if the customer data-model is enabled
- **************************************************************************/
-static bool is_customer_data_model (void)
-{
-// Always enable Alias manager support
-#if 0
-    char sysbuf[8];
-
-    syscfg_get (NULL, "custom_data_model_enabled", sysbuf, sizeof(sysbuf));
-
-    if (strcmp (sysbuf, "1") == 0)
-    {
-        return true;
-    }
-
-    return false;
-#else
-    return true;
-#endif
-}
 
 static void GW_HandleAliasDmList()
 {
@@ -1454,25 +1430,22 @@ static void *GW_DmObjectThread(void *pParam)
     /* copy to local buffer so we can manipulate it */
     char tlvData[GW_SUBTLV_VENDOR_SPECIFIC_DATAMODEL_OBJECT_MAX_LEN + 1];
 
-    if (is_customer_data_model())
-    {
 #ifdef CCSP_ALIAS_MGR
-        aliasMgr = CcspAliasMgrInitialize();
+    aliasMgr = CcspAliasMgrInitialize();
 
-        if (!CcspAliasMgrLoadMappingFile(aliasMgr, ALIAS_MANAGER_MAPPER_FILE))
-        {
-            printf("gw-prov-app: Failed to load alias mapping file %s\n", ALIAS_MANAGER_MAPPER_FILE);
-            CcspAliasMgrFree(aliasMgr);
-            aliasMgr = NULL;
-        }
-        else
-        {
-            printf("gw-prov-app: customer data-model %s successfully loaded\n", ALIAS_MANAGER_MAPPER_FILE);
-        }
-#else
-        alias_mapper_enabled = 1;
-#endif
+    if (!CcspAliasMgrLoadMappingFile(aliasMgr, ALIAS_MANAGER_MAPPER_FILE))
+    {
+        printf("gw-prov-app: Failed to load alias mapping file %s\n", ALIAS_MANAGER_MAPPER_FILE);
+        CcspAliasMgrFree(aliasMgr);
+        aliasMgr = NULL;
     }
+    else
+    {
+        printf("gw-prov-app: customer data-model %s successfully loaded\n", ALIAS_MANAGER_MAPPER_FILE);
+    }
+#else
+    alias_mapper_enabled = 1;
+#endif
 
     while (1)
     {
