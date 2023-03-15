@@ -3737,8 +3737,6 @@ static void GWP_act_DocsisInited_callback (void)
        GWPROV_PRINT(" eRouterMode = %d\n", eRouterMode);
        operMode = eRouterMode;
 #endif
-        /* At this point: enabled, but neither are provisioned (regardless of which is enabled) */
-        operMode = DOCESAFE_EROUTER_OPER_NOIPV4_NOIPV6_extIf;
         eSafeDevice_SetErouterOperStatus(DOCESAFE_EROUTER_IFOPERSTATUS_UP);
     }
         GWPROV_PRINT(" operMode = %d\n", operMode);
