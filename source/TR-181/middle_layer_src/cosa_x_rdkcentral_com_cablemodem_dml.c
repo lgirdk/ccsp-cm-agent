@@ -1462,7 +1462,7 @@ X_RDKCENTRAL_COM_CableModem_GetParamBoolValue
     UNREFERENCED_PARAMETER(hInsContext);
     PCOSA_DATAMODEL_RDKCENTRAL_CABLEMODEM      pMyObject = (PCOSA_DATAMODEL_RDKCENTRAL_CABLEMODEM)g_pCosaBEManager->hRDKCM;
 
-	if( AnscEqualString(ParamName, "LLD_Active", TRUE))
+	if (strcmp(ParamName, "LLD_Active") == 0)
 	{
 		char result_buf[32];
 
