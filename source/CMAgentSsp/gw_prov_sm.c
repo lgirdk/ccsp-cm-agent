@@ -2895,6 +2895,30 @@ static void GWP_act_DocsisLinkDown_callback_2()
 #endif
 }
 
+static void GWP_UpdateDeviceFirstUseDate(void)
+{
+    char firstUseDate[64];
+    FILE *fp;
+
+    syscfg_get(NULL, "device_first_use_date", firstUseDate, sizeof(firstUseDate));
+    if ('\0' == firstUseDate[0]) //First use date is not yet set
+    {
+        //Get the date and set as First use date in syscfg db
+        fp = popen("date +%Y-%m-%dT%H:%M:%S", "r");
+        if (fp != NULL)
+        {
+            if (fgets(firstUseDate, sizeof(firstUseDate), fp) != NULL)
+            {
+                if ((syscfg_set(NULL, "device_first_use_date", firstUseDate) != 0))
+                {
+                    fprintf(stderr, "Error in %s: Failed to set device_first_use_date!\n", __FUNCTION__);
+                }
+            }
+            pclose(fp);
+        }
+    }
+    return;
+}
 static void get_dateanduptime(char *buffer, int *uptime)
 {
     struct     timeval tv;
@@ -2970,6 +2994,9 @@ static int GWP_act_DocsisLinkUp_callback()
     char buffer[64] = {0};
     FILE *fp = NULL;
     ClbkInfo info = {0};
+
+    // Update the First use date in DeviceInfo
+    GWP_UpdateDeviceFirstUseDate();
 
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
