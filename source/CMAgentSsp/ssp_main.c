@@ -170,14 +170,14 @@ int  cmd_dispatch(int  command)
 
             {
                 char                            CName[256];
-
+                // CID 62739 :  Calling risky function
                 if ( g_Subsystem[0] != 0 )
                 {
-                    _ansc_sprintf(CName, "%s%s", g_Subsystem, gpPnmStartCfg->ComponentId);
+		    snprintf(CName, sizeof(CName), "%s%s", g_Subsystem, gpPnmStartCfg->ComponentId);
                 }
                 else
                 {
-                    _ansc_sprintf(CName, "%s", gpPnmStartCfg->ComponentId);
+		    snprintf(CName, sizeof(CName), "%s", gpPnmStartCfg->ComponentId);
                 }
 
                 ssp_PnmMbi_MessageBusEngage
@@ -469,11 +469,11 @@ ANSC_STATUS SendMsg( char *pComponent, char *pBus, char *pParamName, char *pPara
     int                    ret                   = 0;
 
     //Copy Name
-    sprintf( acParameterName, "%s", pParamName );
+    snprintf(acParameterName, sizeof(acParameterName), "%s", pParamName); // CID 190347 : Calling risky function
     param_val[0].parameterName  = acParameterName;
 
     //Copy Value
-    sprintf( acParameterValue, "%s", pParamVal );
+    snprintf(acParameterValue, sizeof(acParameterValue), "%s", pParamVal); // CID 190347 : Calling risky functio
     param_val[0].parameterValue = acParameterValue;
 
     //Copy Type
@@ -524,19 +524,23 @@ ANSC_STATUS CosaDmlGetParamValues(char *pComponent, char *pBus, char *pParamName
     //Copy the value
     if (CCSP_SUCCESS == ret)
     {
-        CcspTraceWarning(("%s parameterValue[%s]\n", __FUNCTION__, retVal[0]->parameterValue));
-
-        if (NULL != retVal[0]->parameterValue)
+	// CID 190351 : Dereference before null check
+	if (retVal)
         {
-            memcpy(pReturnVal, retVal[0]->parameterValue, strlen(retVal[0]->parameterValue) + 1);
-        }
+            
+            if (NULL != retVal[0]->parameterValue)
+            {
+                CcspTraceWarning(("%s parameterValue[%s]\n", __FUNCTION__, retVal[0]->parameterValue));
+                memcpy(pReturnVal, retVal[0]->parameterValue, strlen(retVal[0]->parameterValue) + 1);
+            }
 
-        if (retVal)
-        {
             free_parameterValStruct_t(bus_handle, nval, retVal);
-        }
-
-        return ANSC_STATUS_SUCCESS;
+            return ANSC_STATUS_SUCCESS;
+	}
+	else
+	{
+	    return ANSC_STATUS_FAILURE;
+	}
     }
 
     if (retVal)
@@ -970,8 +974,18 @@ int main(int argc, char* argv[])
   
     CcspTraceInfo(("RDKB_SYSTEM_BOOT_UP_LOG : CcspCMAgent sd_notify Called\n"));
 #endif
+    
+    // CID 273213 : Unchecked return value 
+    int ret = creat("/tmp/cm_initialized",S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if(ret == -1)
+    {
+        CcspTraceError(("Error creating the file /tmp/cm_initialized.\n"));
+    }
+    else
+    {
+        close(ret);
+    }
 
-    creat("/tmp/cm_initialized",S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
     printf("Entering CM loop\n");
     CcspTraceWarning(("RDKB_SYSTEM_BOOT_UP_LOG : Entering CM loop\n"));

@@ -329,10 +329,13 @@ void initLinkStatus()
 	}
 	
 	/* fetch and set cable modem RF signal status */
-	docsis_IsEnergyDetected(&cmAgent_Link_Status.CableModemRfSignalStatus);
-	CcspTraceWarning(("Initialized Cable modem Rf signal status with value='%s'.\n", cmAgent_Link_Status.CableModemRfSignalStatus?"true":"false"));
+	//CID 330325 : Unchecked return value
+	if (ANSC_STATUS_SUCCESS == docsis_IsEnergyDetected(&cmAgent_Link_Status.CableModemRfSignalStatus))
+        {
+	    CcspTraceWarning(("Initialized Cable modem Rf signal status with value='%s'.\n", cmAgent_Link_Status.CableModemRfSignalStatus?"true":"false"));
 
-	CcspTraceWarning(("Initializing CM agent link status with default values.\n"));
+	    CcspTraceWarning(("Initializing CM agent link status with default values.\n"));
+	}
 }
 
 

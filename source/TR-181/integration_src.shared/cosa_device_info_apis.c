@@ -721,7 +721,7 @@ void convert_to_validFW(char *fw,char *valid_fw)
     /* CID 174247 fix */
     if(strlen(fw) < VALID_fW_LEN)
     {
-	strncpy(fw_name_str, fw, VALID_fW_LEN);
+	strncpy(fw_name_str, fw, VALID_fW_LEN-1); // CID 174247 : Buffer not null terminated
     }
     else
     {

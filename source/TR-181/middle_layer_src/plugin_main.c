@@ -104,6 +104,7 @@ COSA_Init
     
     pPlugInfo->uPluginVersion       = THIS_PLUGIN_VERSION;
     g_pDslhDmlAgent                 = pPlugInfo->hDmlAgent;
+    errno_t rc = -1; // CID 151733 : Branch past initialization
 
 /*
     pGetCHProc = (COSAGetCommonHandleProc)pPlugInfo->AcquireFunction("COSAGetDiagPluginInfo");
@@ -330,7 +331,6 @@ COSA_Init
     
     /* Get Subsystem prefix */
     g_GetSubsystemPrefix = (COSAGetSubsystemPrefixProc)pPlugInfo->AcquireFunction("COSAGetSubsystemPrefix");
-    errno_t rc = -1;
     if ( g_GetSubsystemPrefix != NULL )
     {
         char*   tmpSubsystemPrefix;
@@ -454,15 +454,11 @@ COSA_Unload
 
     returnStatus  =  CosaBackEndManagerRemove(g_pCosaBEManager);
         
-    if ( returnStatus == ANSC_STATUS_SUCCESS )
+    if ( returnStatus != ANSC_STATUS_SUCCESS )
     {
-        g_pCosaBEManager = NULL;
+        CcspTraceError(("CosaBackEndManagerRemove is failed !\n"));
     }
-    else
-    {
-        /* print error trace*/
-        g_pCosaBEManager = NULL;
-    }
+    g_pCosaBEManager = NULL;
 }
 
 void ANSC_EXPORT_API
@@ -477,16 +473,12 @@ COSA_MemoryCheck
     /* unload the memory here */
 
     returnStatus  =  CosaBackEndManagerRemove(g_pCosaBEManager);
-        
-    if ( returnStatus == ANSC_STATUS_SUCCESS )
+    if ( returnStatus != ANSC_STATUS_SUCCESS )
     {
-        g_pCosaBEManager = NULL;
+        CcspTraceError(("CosaBackEndManagerRemove is failed !\n"));
     }
-    else
-    {
-        g_pCosaBEManager = NULL;
-    }
-
+ 
+    g_pCosaBEManager = NULL;
     COSA_MemoryUsage();
     COSA_MemoryTable();
 

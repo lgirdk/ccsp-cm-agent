@@ -788,7 +788,13 @@ X_CISCO_COM_CableModem_GetParamStringValue
 #ifdef ENABLE_RDK_WANMANAGER        
         if ( 0 == access( "/tmp/cmoff" , F_OK ) )
         {
-            strcpy_s(pValue,*pUlSize,"CMOFF");
+            //  CID 190349 : Unchecked return value
+            rc = strcpy_s(pValue,*pUlSize,"CMOFF");
+            if(rc != EOK)
+            {
+                ERR_CHK(rc);
+                return ANSC_STATUS_FAILURE;
+            }
             return 0;
         }
 #endif

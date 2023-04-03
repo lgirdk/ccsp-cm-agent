@@ -2144,7 +2144,8 @@ static void get_dateanduptime(char *buffer, int *uptime)
     struct     timeval tv;
     struct     tm *tm;
     struct     sysinfo info;
-    char fmt[64], buf[64];
+    // CID 163102 : Uninitialized scalar variable
+    char fmt[64] = {0}, buf[64] = {0};
 
     sysinfo( &info );
     gettimeofday( &tv, NULL );
@@ -2154,7 +2155,7 @@ static void get_dateanduptime(char *buffer, int *uptime)
         strftime( fmt, sizeof( fmt ), "%y%m%d-%T.%%06u", tm );
         snprintf( buf, sizeof( buf ), fmt, tv.tv_usec );
     }
-    sprintf( buffer, "%s", buf);
+    snprintf(buffer, 64, "%s", buf); // CID 46347 : Calling risky function
     *uptime = info.uptime;
 }
 
@@ -2583,6 +2584,7 @@ static void GWP_act_DocsisCfgfile_callback(Char* cfgFile)
         CcspTraceInfo((" Cannot stat eSafe Config file \"%s\", %s, aborting Config file\n", cfgFileName, strerror(errno)));
         goto gimReply;
     }
+    
     cfgFileBuffLen = cfgFileStat.st_size;
     if (cfgFileBuffLen == 0)
     {
@@ -2600,8 +2602,8 @@ static void GWP_act_DocsisCfgfile_callback(Char* cfgFile)
         CcspTraceInfo((" Cannot alloc buffer for eSafe Config file \"%s\", %s, aborting Config file\n", cfgFileName, strerror(errno)));
         goto gimReply;
     }
-
-    if ((cfgFd = open(cfgFileName, O_RDONLY)) < 0)
+    // CID 135245 :  time-of-check, time-of-use race condition.
+    if ((cfgFd = open(cfgFile, O_RDONLY)) < 0)
     {
         printf("Cannot open eSafe Config file \"%s\", %s, aborting Config file\n", cfgFileName, strerror(errno));
         CcspTraceInfo((" Cannot open eSafe Config file \"%s\", %s, aborting Config file\n", cfgFileName, strerror(errno)));
@@ -2682,7 +2684,6 @@ gimReply:
     /* Reply to GIM SRN */
     notificationReply_CfgFileForEsafe();
     
-
     return;
 }
 
@@ -3370,12 +3371,23 @@ void set_time(uint32_t TimeSec)
 
 int RemoveIfFileExists(const char *fname)
 {
-	if(access(fname, F_OK) == 0) 
+	int fd = open(fname, O_RDONLY);
+	if (fd < 0)
 	{
-		remove(fname);
-		return 0;
-	}
-	return -1;
+            return -1;  
+        }
+        // CID 330288 : Unchecked return value
+	int ret = remove(fname);
+	if(ret == 0) 
+	{
+            CcspTraceInfo(("Removed file %s \n",fname));
+        } 
+        else 
+	{ 
+	    CcspTraceInfo(("Failed to remove file %s \n",fname));
+        }
+        close(fd);
+        return 0;
 }
 /***********************************************************************************************
  * send signal to conditional pthread
@@ -3431,6 +3443,7 @@ void *WAN_Failover_Simulation(void *arg)
 	pthread_cond_init(&LinkdownCond,&LinkdownAttr);
 	pthread_mutex_lock(&Linkdownlock);
 	set_time(cmAgent_Link_Status.DocsisLinkDownTimeOut);
+	int rc;
 	if(cmAgent_Link_Status.DocsisLinkStatus== true)
 	{
 		/*********Docsis Link down callback*****/	
@@ -3446,7 +3459,12 @@ void *WAN_Failover_Simulation(void *arg)
 	}
 	else
 	{
-		pthread_cond_timedwait(&LinkdownCond,&Linkdownlock,&ts);//sleep based on tr181 link down timeout
+		// CID 330327 : Unchecked return value
+		rc = pthread_cond_timedwait(&LinkdownCond,&Linkdownlock,&ts);//sleep based on tr181 link down timeout
+		if(rc)
+	        {
+		    CcspTraceInfo((" pthread_cond_timedwait Error in %s \n", __FUNCTION__));
+		}
 		cmAgent_Link_Status.DocsisLinkDown=false;
 	}
 	

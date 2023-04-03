@@ -127,11 +127,11 @@ ANSC_STATUS SetParamValues( char *pComponent, char *pBus, char *pParamName, char
     int                    ret                   = 0;
 
     //Copy Name
-    sprintf( acParameterName, "%s", pParamName );
+    snprintf( acParameterName, sizeof(acParameterName), "%s", pParamName) ; // CID 190355 : Calling risky function
     param_val[0].parameterName  = acParameterName;
 
     //Copy Value
-    sprintf( acParameterValue, "%s", pParamVal );
+    snprintf( acParameterValue, sizeof(acParameterValue), "%s", pParamVal) ; // CID 190355 : Calling risky function
     param_val[0].parameterValue = acParameterValue;
 
     //Copy Type
@@ -186,9 +186,9 @@ void *PollDocsisInformations(void *args)
 
   while(1)
   { 
-          
-            rc = memset_s(buff,sizeof(buff),0,sizeof(buff));
-            ERR_CHK(rc);
+           // CID 70783 : Array compared against 0
+           rc = memset_s(buff,sizeof(buff),0,sizeof(buff));
+           ERR_CHK(rc);
            fp = fopen("/nvram/docsispolltime.txt", "r");
 	   if (!fp)
 	   {
@@ -197,7 +197,7 @@ void *PollDocsisInformations(void *args)
 	   else
 	   {
            	retValue = fscanf(fp, "%29s", buff);
-           	if( (retValue != -1) && (buff != NULL ) )
+           	if( (retValue != -1) && (buff[0] != '\0') )
            	{
         		pollinterval = atoi(buff);
            	}
@@ -266,7 +266,11 @@ void *PollDocsisInformations(void *args)
     }
     Ccsp_cm_clnt_unlock();
     CcspTraceWarning(("pollinterval to fetch Docsis diag is= %d\n",pollinterval));
-    sleep (pollinterval);
+    // CID 135629 : Untrusted value as argument
+    if (pollinterval > 0 && pollinterval < INT_MAX )
+    {
+        sleep (pollinterval);
+    }
 
 EXIT:
 
@@ -398,7 +402,8 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
         ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
         if (pWanCfg)
         {
-            if (pWanCfg->wanInstanceNumber)
+	    // CID 190348 :  Array compared against 0 
+            if (pWanCfg->wanInstanceNumber[0] != '\0')
             {
                 iWanInstanceNumber = atoi(pWanCfg->wanInstanceNumber);
             }
@@ -489,7 +494,7 @@ void* ThreadMonitorOperStatusAndNotify(void *args)
         ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
         if (pWanCfg)
         {
-            if (pWanCfg->wanInstanceNumber)
+            if (pWanCfg->wanInstanceNumber[0] != '\0') //CID 190353 : Array compared against 0
             {
                 iWanInstanceNumber = atoi(pWanCfg->wanInstanceNumber);
             }
@@ -554,7 +559,7 @@ void* ThreadUpdateInformMsg(void *args)
             CHAR acSetParamName[256];
             ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
 
-            if (pWanCfg->wanInstanceNumber)
+            if (pWanCfg->wanInstanceNumber[0] != '\0') // CID 192713 : Array compared against 0
             {
                 iWanInstanceNumber = atoi(pWanCfg->wanInstanceNumber);
             }
@@ -814,7 +819,8 @@ CosaDmlCmSetLog
     return ANSC_STATUS_SUCCESS;
 }
 
-#define DOCSIS_EVENT_LOG_SIZE 50
+// CID 135381 : Large stack use .  Local variable entries uses 14400 bytes of stack space, which exceeds the maximum single use of 10000 bytes.
+#define DOCSIS_EVENT_LOG_SIZE 30
 
 ANSC_STATUS
 CosaDmlCmGetDocsisLog
@@ -833,7 +839,10 @@ CosaDmlCmGetDocsisLog
     errno_t rc = -1;
 
     if((!pulCount) || (!ppConf)){
-	AnscTraceWarning(("Input parameter is NULL  pulCount = %ln , ppConf = %p , %s, %d\n",pulCount, ppConf, __FUNCTION__, __LINE__));
+        if(pulCount)
+        {
+	    AnscTraceWarning(("Input parameter is NULL  pulCount = %lu , ppConf = %p , %s, %d\n",*pulCount, ppConf, __FUNCTION__, __LINE__));
+        }
 	return ANSC_STATUS_FAILURE;
 	}
 
@@ -882,7 +891,10 @@ CosaDmlCmGetDownstreamChannel
 {
     UNREFERENCED_PARAMETER(hContext);
     if((!pulCount) || (!ppConf)){
-	AnscTraceWarning(("Input parameter is NULL  pulCount = %ln , ppConf = %p , %s, %d\n",pulCount, ppConf, __FUNCTION__, __LINE__));
+        if(pulCount)
+        {
+	    AnscTraceWarning(("Input parameter is NULL  pulCount = %lu , ppConf = %p , %s, %d\n",*pulCount, ppConf, __FUNCTION__, __LINE__));
+        }
 	return ANSC_STATUS_FAILURE;
 	}
     /* Coverity Fix CID:79243 CHECKED_RETURN */
@@ -919,7 +931,10 @@ CosaDmlCmGetUpstreamChannel
 {
     UNREFERENCED_PARAMETER(hContext);
     if((!pulCount) || (!ppConf)){
-	AnscTraceWarning(("Input parameter is NULL  pulCount = %ln , ppConf = %p , %s, %d\n",pulCount, ppConf, __FUNCTION__, __LINE__));
+        if(pulCount)
+        {
+	    AnscTraceWarning(("Input parameter is NULL  pulCount = %lu , ppConf = %p , %s, %d\n",*pulCount, ppConf, __FUNCTION__, __LINE__));
+        }
 	return ANSC_STATUS_FAILURE;
 	}
    /*Coverity Fix CID: 78775 CHECKED_RETURN */
@@ -1001,7 +1016,10 @@ CosaDmlCmGetCMErrorCodewords
 {
     UNREFERENCED_PARAMETER(hContext);
     if((!pulCount) || (!ppConf)){
-	AnscTraceWarning(("Input parameter is NULL  pulCount = %ln , ppConf = %p , %s, %d\n",pulCount, ppConf, __FUNCTION__, __LINE__));
+        if(pulCount)
+        {
+	    AnscTraceWarning(("Input parameter is NULL  pulCount = %lu , ppConf = %p , %s, %d\n",*pulCount, ppConf, __FUNCTION__, __LINE__));
+        }
 	return ANSC_STATUS_FAILURE;
 	}
     /*Coverity Fix CID:55875 CHECKED_RETURN */
@@ -1218,7 +1236,10 @@ CosaDmlCmGetCPEList
     char    LanMode[64] = {0};
     ULONG   size = 64;
     if((!pulInstanceNumber) || (!ppCPEList)){
-	AnscTraceWarning(("Input parameter is NULL  pulInstanceNumber = %ln , ppCPEList = %p , %s, %d\n",pulInstanceNumber, ppCPEList, __FUNCTION__, __LINE__));
+        if(pulInstanceNumber)
+        {
+	    AnscTraceWarning(("Input parameter is NULL  pulInstanceNumber = %lu , ppCPEList = %p , %s, %d\n",*pulInstanceNumber, ppCPEList, __FUNCTION__, __LINE__));
+        }
 	return ANSC_STATUS_FAILURE;
 	}
     if(0 != g_GetParamValueString(g_pDslhDmlAgent, LANMODE_DM, LanMode, &size))
