@@ -515,9 +515,9 @@ ANSC_STATUS SendMsg( char *pComponent, char *pBus, char *pParamName, char *pPara
 
 ANSC_STATUS CosaDmlGetParamValues(char *pComponent, char *pBus, char *pParamName, char *pReturnVal)
 {
-    parameterValStruct_t **retVal;
+    parameterValStruct_t **retVal = NULL;
     extern ANSC_HANDLE bus_handle;
-    char *ParamName[1];
+    char *ParamName[1] = {};
     int ret = 0,
         nval;
 
