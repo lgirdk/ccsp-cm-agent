@@ -68,11 +68,25 @@ static cap_user appcaps;
 #define WAN_COMPONENT_NAME                "eRT.com.cisco.spvtg.ccsp.wanmanager"
 #define WAN_COMP_NAME_WITHOUT_SUBSYSTEM "com.cisco.spvtg.ccsp.wanmanager"
 #define WAN_CM_INTERFACE_INSTANCE_NUM      1
+
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+#define WAN_BOOTINFORM_CUSTOMCONFIG_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.EnableCustomConfig"
+#define WAN_BOOTINFORM_CONFIGWANENABLE_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.ConfigureWanEnable"
+#define WAN_BOOTINFORM_OPERSTATUSENABLE_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.EnableOperStatusMonitor"
+#define WAN_BOOTINFORM_PHYPATH_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.BaseInterface"
+#define WAN_BOOTINFORM_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.VirtualInterface.1.Name"
+#define WAN_NOE_PARAM_NAME                "Device.X_RDK_WanManager.InterfaceNumberOfEntries"
+#define WAN_IF_NAME_PARAM_NAME            "Device.X_RDK_WanManager.Interface.%d.Name"
+#else
 #define WAN_BOOTINFORM_CUSTOMCONFIG_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.EnableCustomConfig"
 #define WAN_BOOTINFORM_CONFIGWANENABLE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.ConfigureWanEnable"
 #define WAN_BOOTINFORM_OPERSTATUSENABLE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.EnableOperStatusMonitor"
 #define WAN_BOOTINFORM_PHYPATH_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Phy.Path"
 #define WAN_BOOTINFORM_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Wan.Name"
+#define WAN_NOE_PARAM_NAME                "Device.X_RDK_WanManager.CPEInterfaceNumberOfEntries"
+#define WAN_IF_NAME_PARAM_NAME            "Device.X_RDK_WanManager.CPEInterface.%d.Name"
+#endif /* WAN_MANAGER_UNIFICATION_ENABLED */ 
+
 #define WAN_PHYIF_NAME_PRIMARY "erouter0"
 
 #ifdef _COSA_BCM_ARM_
@@ -84,8 +98,6 @@ static cap_user appcaps;
 #endif
 
 #define WAN_PHYPATH_VALUE "Device.X_CISCO_COM_CableModem."
-#define WAN_NOE_PARAM_NAME                "Device.X_RDK_WanManager.CPEInterfaceNumberOfEntries"
-#define WAN_IF_NAME_PARAM_NAME            "Device.X_RDK_WanManager.CPEInterface.%d.Name"
 
 typedef struct _WAN_PARAM_INFO
 {

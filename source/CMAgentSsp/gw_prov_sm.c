@@ -177,8 +177,15 @@
 
 #define WAN_DBUS_PATH                     "/com/cisco/spvtg/ccsp/wanmanager"
 #define WAN_COMPONENT_NAME                "eRT.com.cisco.spvtg.ccsp.wanmanager"
+
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+#define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterface"
+#define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterfaceStatus"
+#else
 #define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Path"
 #define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Status"
+#endif /* */
+
 #define DOCSISLINKDOWN_TESTFILE "/tmp/.DocsisLinkDown_TestRunning.txt"
 typedef enum {
     EVENT_GWP_NONE = -1,

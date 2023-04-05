@@ -72,8 +72,13 @@
 #if defined (FEATURE_RDKB_WAN_MANAGER)
 #define WAN_DBUS_PATH                     "/com/cisco/spvtg/ccsp/wanmanager"
 #define WAN_COMPONENT_NAME                "eRT.com.cisco.spvtg.ccsp.wanmanager"
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+#define WAN_PHY_STATUS_PARAM_NAME         "Device.X_RDK_WanManager.Interface.%d.BaseInterfaceStatus"
+#define WAN_OPER_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.Interface.%d.OperationalStatus"
+#else
 #define WAN_PHY_STATUS_PARAM_NAME         "Device.X_RDK_WanManager.CPEInterface.%d.Phy.Status"
 #define WAN_OPER_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.%d.Wan.OperationalStatus"
+#endif /* WAN_MANAGER_UNIFICATION_ENABLED */
 #define WAN_CM_INTERFACE_INSTANCE_NUM      1
 #endif
 /**

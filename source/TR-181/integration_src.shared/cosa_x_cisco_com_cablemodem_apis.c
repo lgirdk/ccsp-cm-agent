@@ -79,8 +79,11 @@
 
 #define  PVALUE_MAX 1023 
 #if defined (FEATURE_RDKB_WAN_MANAGER)
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+#define WAN_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.Interface.%d.VirtualInterface.1.Name"
+#else
 #define WAN_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Wan.Name"
-
+#endif /* WAN_MANAGER_UNIFICATION_ENABLED */
 #ifdef _COSA_BCM_ARM_
 #define DOCSIS_INF_NAME "cm0"
 #elif defined(INTEL_PUMA7)
