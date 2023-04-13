@@ -1822,7 +1822,23 @@ static void *GWP_lxcserver_threadfunc(void *data)
 }
 #endif
 
+static void updateErouterMode(char* val)
+{
+    oldRouterMode = eRouterMode;
+    eRouterMode = atoi(val);
 
+    if (eRouterMode != DOCESAFE_ENABLE_DISABLE_extIf &&
+        eRouterMode != DOCESAFE_ENABLE_IPv4_extIf    &&
+        eRouterMode != DOCESAFE_ENABLE_IPv6_extIf    &&
+        eRouterMode != DOCESAFE_ENABLE_IPv4_IPv6_extIf)
+    {
+        eRouterMode = DOCESAFE_ENABLE_DISABLE_extIf;
+    }
+
+    GWP_UpdateERouterMode();
+    sleep(5);
+    v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.RebootDevice string Device"); // Reboot on change of device mode and backup logs.
+}
 /**************************************************************************/
 /*! \fn void *GWP_sysevent_threadfunc(void *data)
  **************************************************************************
@@ -1950,24 +1966,16 @@ static void *GWP_sysevent_threadfunc(void *data)
                 {
                     UpdateActiveDeviceMode();
                 }
+
+                else if (ret_value == EROUTER_MODE)
+                {
+                    updateErouterMode(val);
+                }
                 continue;
             } 
             if (ret_value == EROUTER_MODE)
             {
-                oldRouterMode = eRouterMode;
-                eRouterMode = atoi(val);
-
-                if (eRouterMode != DOCESAFE_ENABLE_DISABLE_extIf &&
-                    eRouterMode != DOCESAFE_ENABLE_IPv4_extIf    &&
-                    eRouterMode != DOCESAFE_ENABLE_IPv6_extIf    &&
-                    eRouterMode != DOCESAFE_ENABLE_IPv4_IPv6_extIf)
-                {
-                    eRouterMode = DOCESAFE_ENABLE_DISABLE_extIf;
-                }
-
-                GWP_UpdateERouterMode();
-                sleep(5);
-                v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.RebootDevice string Device"); // Reboot on change of device mode and backup logs.
+                updateErouterMode(val);
             }
             else if (ret_value == IPV4STATUS)
             {
