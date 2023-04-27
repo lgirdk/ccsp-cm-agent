@@ -14,12 +14,6 @@
  * limitations under the License.
  **********************************************************************/
 
-/*
-   Define CCSP_ALIAS_MGR to use the original RDKB Alias Manager APIs.
-   Leave undefined to use the (experimental) new replacements.
-*/
-//#define CCSP_ALIAS_MGR 1
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -33,12 +27,7 @@
 #include <time.h>
 
 #include <ccsp_base_api.h>
-#ifdef CCSP_ALIAS_MGR
-#include <ccsp_alias_mgr.h>
-#include <ccsp_alias_mgr_helper.h>
-#else
 #include <custom_alias_utils.h>
-#endif
 #include <syscfg/syscfg.h>
 #include <ansc_platform.h>
 
@@ -66,7 +55,6 @@ static void *bus_handle = NULL;
 #define DHCPV4_PID_FILE "/var/run/eRT_ti_udhcpc.pid"
 #define DHCPV6_PID_FILE "/var/run/erouter_dhcp6c.pid"
 
-#define ALIAS_MANAGER_MAPPER_FILE "/usr/ccsp/custom_mapper.xml"
 #define CR_COMPONENT_ID "eRT.com.cisco.spvtg.ccsp.CR"
 #define SUBSYSTEM_PREFIX "eRT."
 
@@ -1141,9 +1129,6 @@ static void GW_HandleAliasDmList()
                             {
                                 matchFound = true;
                                 snprintf(cmd, sizeof(cmd), "%s%d.%s", parent, idx, parameterName);
-#ifdef CCSP_ALIAS_MGR
-#error "Alias lookup not implemented for old Alias Manager API"
-#else
                                 int relMem = 0;
                                 char *internalName = aliasGetInternalName(cmd, &relMem);
                                 if (internalName)
@@ -1153,7 +1138,6 @@ static void GW_HandleAliasDmList()
                                     if (relMem)
                                         AnscFreeMemory(internalName);
                                 }
-#endif
                                 GW_SetParam(cmd, GW_MapTr69TypeToDmcliType(pCurr->Type), pCurr->Value);
                             }
 
@@ -1225,9 +1209,6 @@ static void GW_HandleAliasDmList()
             if (ret == CCSP_SUCCESS)
             {
                 snprintf(cmd, sizeof(cmd), "%s%d.%s", parent, idx, parameterName);
-#ifdef CCSP_ALIAS_MGR
-#error "Alias lookup not implemented for old Alias Manager API"
-#else
                 int relMem = 0;
                 char *internalName = aliasGetInternalName(cmd, &relMem);
                 if (internalName)
@@ -1237,7 +1218,6 @@ static void GW_HandleAliasDmList()
                     if (relMem)
                         AnscFreeMemory(internalName);
                 }
-#endif
                 GW_SetParam(cmd, GW_MapTr69TypeToDmcliType(pCurr->Type), pCurr->Value);
             }
 
@@ -1418,33 +1398,14 @@ out:
  **************************************************************************/
 static void *GW_DmObjectThread(void *pParam)
 {
-#ifdef CCSP_ALIAS_MGR
-    ANSC_HANDLE aliasMgr = NULL;         // AliasManager handle for DataModel names' aliasing
-#else
     int alias_mapper_enabled = 0;
-#endif
 
     char *internalName;
 
     /* copy to local buffer so we can manipulate it */
     char tlvData[GW_SUBTLV_VENDOR_SPECIFIC_DATAMODEL_OBJECT_MAX_LEN + 1];
 
-#ifdef CCSP_ALIAS_MGR
-    aliasMgr = CcspAliasMgrInitialize();
-
-    if (!CcspAliasMgrLoadMappingFile(aliasMgr, ALIAS_MANAGER_MAPPER_FILE))
-    {
-        printf("gw-prov-app: Failed to load alias mapping file %s\n", ALIAS_MANAGER_MAPPER_FILE);
-        CcspAliasMgrFree(aliasMgr);
-        aliasMgr = NULL;
-    }
-    else
-    {
-        printf("gw-prov-app: customer data-model %s successfully loaded\n", ALIAS_MANAGER_MAPPER_FILE);
-    }
-#else
     alias_mapper_enabled = 1;
-#endif
 
     while (1)
     {
@@ -1535,19 +1496,6 @@ static void *GW_DmObjectThread(void *pParam)
                     continue;
                 }
 
-#ifdef CCSP_ALIAS_MGR
-                if (aliasMgr != NULL)
-                {
-                    internalName = CcspAliasMgrGetFirstInternalName(aliasMgr, dmObject.Name);
-
-                    if (internalName)
-                    {
-                        printf("gw-prov-app: replacing TLV202.43.12 parameter %s with internal name %s\n", dmObject.Name, internalName);
-                        strncpy(dmObject.Name, internalName, sizeof(dmObject.Name) - 1);
-                        AnscFreeMemory(internalName);
-                    }
-                }
-#else
                 if (alias_mapper_enabled)
                 {
                     int relMem = 0;
@@ -1561,7 +1509,6 @@ static void *GW_DmObjectThread(void *pParam)
                             AnscFreeMemory(internalName);
                     }
                 }
-#endif
 
                 /* convert TR069 type to dmcli type */
                 const char *pTypeDmcli = GW_MapTr69TypeToDmcliType(dmObject.Type);
@@ -1604,12 +1551,6 @@ static void *GW_DmObjectThread(void *pParam)
         }
     }
 
-#ifdef CCSP_ALIAS_MGR
-    if (aliasMgr)
-    {
-        CcspAliasMgrFree(aliasMgr);
-    }
-#endif
 
     return NULL;
 }
