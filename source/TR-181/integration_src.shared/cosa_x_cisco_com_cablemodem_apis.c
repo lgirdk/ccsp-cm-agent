@@ -177,6 +177,13 @@ void *PollDocsisInformations(void *args)
   errno_t rc = -1;
   int ind = -1;
 
+  PCOSA_DATAMODEL_CABLEMODEM      pMyObject = (PCOSA_DATAMODEL_CABLEMODEM)g_pCosaBEManager->hCM;
+  if (pMyObject == NULL)
+  {
+      CcspTraceError(("CableModem object is NULL!\n"));
+      return NULL;
+  }
+
   /* CID 258230 fix */
   int fd = creat("/nvram/docsispolltime.txt",S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if(fd == -1)
@@ -211,9 +218,7 @@ void *PollDocsisInformations(void *args)
 	   
 	   
 // Fetching docsis gateway info
-    PCOSA_DATAMODEL_CABLEMODEM      pMyObject = (PCOSA_DATAMODEL_CABLEMODEM)g_pCosaBEManager->hCM;
     ANSC_STATUS                     ret       = ANSC_STATUS_SUCCESS;
-
 
     Ccsp_cm_clnt_lock();
     pMyObject->DownstreamChannelNumber = 0;
