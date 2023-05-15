@@ -80,8 +80,11 @@
 #define  PVALUE_MAX 1023 
 #if defined (FEATURE_RDKB_WAN_MANAGER)
 #define WAN_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Wan.Name"
+#define WAN_LINK_STATUS_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Wan.LinkStatus"
 
-#ifdef _COSA_BCM_ARM_
+#ifdef _LG_MV2_PLUS_
+#define DOCSIS_INF_NAME "lbr0"
+#elif defined (_COSA_BCM_ARM_)
 #define DOCSIS_INF_NAME "cm0"
 #elif defined(INTEL_PUMA7)
 #define DOCSIS_INF_NAME "dpdmta1"
@@ -157,6 +160,43 @@ ANSC_STATUS SetParamValues( char *pComponent, char *pBus, char *pParamName, char
         return ANSC_STATUS_FAILURE;
     }
 
+    return ANSC_STATUS_SUCCESS;
+}
+
+static ANSC_STATUS CreateL2Interface(void)
+{
+    CHAR base_mac[18];
+    CHAR path[64];
+
+    snprintf(path, sizeof(path), "/sys/devices/virtual/net/%s/brif", WAN_PHY_NAME);
+    if (access(path, F_OK) == 0)
+    {
+        CcspTraceInfo(("%s-%d group interface already exists: %s\n", __FUNCTION__, __LINE__, WAN_PHY_NAME));
+        return ANSC_STATUS_SUCCESS;
+    }
+
+    /* Interface creation and configuration shall be handled in HAL */
+    if (vlan_hal_addGroup(WAN_PHY_NAME, "0") != RETURN_OK)
+    {
+        CcspTraceError(("%s-%d Failed to add group: %s\n", __FUNCTION__, __LINE__, WAN_PHY_NAME));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    if (vlan_hal_addInterface(WAN_PHY_NAME, DOCSIS_INF_NAME, "0") != RETURN_OK)
+    {
+        CcspTraceError(("%s-%d Failed to add interface: %s\n", __FUNCTION__, __LINE__, DOCSIS_INF_NAME));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    base_mac[0] = '\0';
+    syscfg_get(NULL, "base_mac_address", base_mac, sizeof(base_mac));
+    if (base_mac[0] != '\0')
+    {
+        v_secure_system("ifconfig %s hw ether %s", WAN_PHY_NAME, base_mac);
+    }
+
+    v_secure_system("ifconfig %s up", WAN_PHY_NAME);
+    CcspTraceInfo(("%s-%d Created group interface: %s\n", __FUNCTION__, __LINE__, WAN_PHY_NAME));
     return ANSC_STATUS_SUCCESS;
 }
 #endif
@@ -597,6 +637,79 @@ void* ThreadUpdateInformMsg(void *args)
     return args;   
 }
 
+void* ThreadSetUpstream(void *args)
+{
+    PCOSA_DATAMODEL_CABLEMODEM pMyObject = (PCOSA_DATAMODEL_CABLEMODEM)args;
+    PCOSA_DML_CM_WANCFG pWanCfg;
+    INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
+    INT bridge_mode = -1;
+    CHAR acSetParamName[256];
+    CHAR buf[8];
+    ANSC_STATUS retval;
+
+    pthread_detach(pthread_self());
+
+    if (!pMyObject)
+    {
+        CcspTraceError(("%s-%d Thread argument is NULL\n",__FUNCTION__,__LINE__));
+        return NULL;
+    }
+
+    pWanCfg = &pMyObject->CmWanCfg;
+    if (!pWanCfg)
+    {
+        CcspTraceError(("%s-%d WAN config is NULL\n",__FUNCTION__,__LINE__));
+        return NULL;
+    }
+
+    if (pWanCfg->wanInstanceNumber[0] != '\0')
+    {
+        iWanInstanceNumber = atoi(pWanCfg->wanInstanceNumber);
+    }
+
+    if (syscfg_get(NULL, "bridge_mode", buf, sizeof(buf)) == 0)
+    {
+        bridge_mode = atoi(buf);
+    }
+
+    if (pWanCfg->Upstream && bridge_mode == 0)
+    {
+        retval = CreateL2Interface();
+        if (retval != ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceError(("%s-%d Failed to create L2 interface %s\n", __FUNCTION__, __LINE__, WAN_PHY_NAME));
+            return NULL;
+        }
+
+        /* Set Wan.Name */
+        snprintf(acSetParamName, sizeof(acSetParamName), WAN_INTERFACE_PARAM_NAME, iWanInstanceNumber);
+        retval = SetParamValues(WAN_COMPONENT_NAME, WAN_DBUS_PATH, acSetParamName, WAN_PHY_NAME, ccsp_string, FALSE);
+        if (retval != ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceError(("%s-%d Failed to set %s\n", __FUNCTION__, __LINE__, acSetParamName));
+        }
+
+        /* Set Wan.LinkStatus */
+        snprintf(acSetParamName, sizeof(acSetParamName), WAN_LINK_STATUS_PARAM_NAME, iWanInstanceNumber);
+        retval = SetParamValues(WAN_COMPONENT_NAME, WAN_DBUS_PATH, acSetParamName, "Up", ccsp_string, TRUE);
+        if (retval != ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceError(("%s-%d Failed to set %s\n", __FUNCTION__, __LINE__, acSetParamName));
+        }
+    }
+    else
+    {
+        /* Set Wan.LinkStatus */
+        snprintf(acSetParamName, sizeof(acSetParamName), WAN_LINK_STATUS_PARAM_NAME, iWanInstanceNumber);
+        retval = SetParamValues(WAN_COMPONENT_NAME, WAN_DBUS_PATH, acSetParamName, "Down", ccsp_string, TRUE);
+        if (retval != ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceError(("%s-%d Failed to set %s\n", __FUNCTION__, __LINE__, acSetParamName));
+        }
+    }
+    return NULL;
+}
+
 ANSC_STATUS
 CosaDmlCMWanMonitorPhyStatusAndNotify(void *arg)
 {
@@ -623,6 +736,13 @@ ANSC_STATUS CosaDmlCMUpdateInformMsgToWanMgr(void *arg)
     return ANSC_STATUS_SUCCESS;
 }
 
+ANSC_STATUS CosaDmlCMSetUpstream(void *arg)
+{
+    pthread_t CmISetUpstreamThreadId;
+    PCOSA_DATAMODEL_CABLEMODEM      pMyObject = (PCOSA_DATAMODEL_CABLEMODEM)arg;
+    pthread_create(&CmISetUpstreamThreadId, NULL, &ThreadSetUpstream, pMyObject);
+    return ANSC_STATUS_SUCCESS;
+}
 #endif
 
 ANSC_STATUS
