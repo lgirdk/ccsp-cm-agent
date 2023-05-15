@@ -715,6 +715,7 @@ CosaDmlCMWanUpdateCustomConfig
 ANSC_STATUS CosaDmlCMWanMonitorPhyStatusAndNotify(void* arg);
 ANSC_STATUS CosaDmlCMWanMonitorOperStatusAndNotify(void* arg);
 ANSC_STATUS CosaDmlCMUpdateInformMsgToWanMgr(void *arg);
+ANSC_STATUS CosaDmlCMSetUpstream(void *arg);
 #endif
 
 /** @} */  //END OF GROUP CM_AGENT_APIS
