@@ -84,7 +84,10 @@
 #else
 #define WAN_INTERFACE_PARAM_NAME "Device.X_RDK_WanManager.CPEInterface.%d.Wan.Name"
 #endif /* WAN_MANAGER_UNIFICATION_ENABLED */
-#ifdef _COSA_BCM_ARM_
+
+#ifdef _LG_MV2_PLUS_
+#define DOCSIS_INF_NAME "lbr0"
+#elif defined (_COSA_BCM_ARM_)
 #define DOCSIS_INF_NAME "cm0"
 #elif defined(INTEL_PUMA7)
 #define DOCSIS_INF_NAME "dpdmta1"
