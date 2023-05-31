@@ -442,6 +442,11 @@ typedef struct{
 docsis_linkdow_testcase DocsisLd_cfg={false,false};
 #endif //WAN_FAILOVER_SUPPORTED
 
+#if (_LG_MV2_PLUS_)
+// Variable to track if tlv parsing is successful.
+static int tlv_flag;
+#endif
+
 /**************************************************************************/
 /*      LOCAL FUNCTIONS:                                                  */
 /**************************************************************************/
@@ -3761,6 +3766,9 @@ gimReply:
     {
         //Notifying the CcspPandM and CcspTr069 module that the TLV parsing is successful and done
         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "TLV202-status", "success", 0);
+#if (_LG_MV2_PLUS_)
+        tlv_flag = 1;
+#endif
     }
     else
     {
@@ -4396,6 +4404,13 @@ void *GWP_EventHandler(void *arg)
             sleep(1);
         }
 
+#if (_LG_MV2_PLUS_)
+        while(tlv_flag == 0)
+        {
+            GWPROV_PRINT("%s:%d: Waiting for ccsp-cm-agent to parse TLV config file\n", __FUNCTION__, __LINE__);
+            sleep(1);//sleep(1) is to avoid lots of trace msgs when there is latency
+        }
+#endif
 
         GWPROV_PRINT("%s:%d: going to wait in mq receive \n", __FUNCTION__, __LINE__);
         /* receive the message */
