@@ -717,6 +717,17 @@
           <writable>true</writable>
 
         </parameter>
+        <parameter>
+
+          <name>Upstream</name>
+
+          <type>boolean</type>
+
+          <syntax>bool</syntax>
+
+          <writable>true</writable>
+
+        </parameter>
 <?endif?>
 
       </parameters>
