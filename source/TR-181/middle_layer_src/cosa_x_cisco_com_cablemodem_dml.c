@@ -258,6 +258,15 @@ X_CISCO_COM_CableModem_GetParamBoolValue
         *pBool = pWanCfg->CustomWanConfigUpdate;
         return TRUE;
     }
+
+     rc =  strcmp_s("Upstream",strlen("Upstream"),ParamName, &ind);
+     ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        *pBool = pWanCfg->Upstream;
+        return TRUE;
+    }
+
 #endif
 
     /* AnscTraceWarning(("Unsupported parameter '%s'\n", ParamName)); */
@@ -1373,6 +1382,18 @@ X_CISCO_COM_CableModem_SetParamBoolValue
     {
         pWanCfg->CustomWanConfigUpdate = bValue;
         CosaDmlCMWanUpdateCustomConfig(pMyObject,bValue);
+        return TRUE;
+    }
+
+    //TODO: Figure out and implement all necessary actions when Upstream is changed. This is only PoC
+    rc =  strcmp_s( "Upstream",strlen("Upstream"),ParamName, &ind);
+    ERR_CHK(rc);
+    if((!ind) && (rc == EOK))
+    {
+        pWanCfg->Upstream = bValue;
+
+        CosaDmlCMSetUpstream((void *)pMyObject);
+
         return TRUE;
     }
 #endif
