@@ -141,7 +141,7 @@ static bool ccsp_type_from_name(char *name, enum dataType_e *type_ptr)
  *  \param[in] pValue - Parameter Value
  *  \return int - 0-success 
  *                1-set param value error 
- *                2-Issues with component discovery, input params
+ *                2-Issues with component namespace discovery, input params
  **************************************************************************/
 
 static int GW_SetParameterValue(void* bus_handle, const char *pName, const char *pType, const char *pValue)
@@ -152,51 +152,27 @@ static int GW_SetParameterValue(void* bus_handle, const char *pName, const char 
     char *dst_pathname    =  NULL;
     parameterValStruct_t param_val[1] = {0};
     char* pFaultParameter = NULL;
-    int FailureCount = 0;
     int retVal=1;
     int ret;
 
     if ((bus_handle == NULL) || (pName == NULL) || (pType == NULL) || (pValue == NULL))
     {
-        GWPROV_PRINT("Error input parameter\n");
+        GWPROV_PRINT("Error!!! input parameter\n");
         return 2;
     }
-    while (1)
+    ret = CcspBaseIf_discComponentSupportingNamespace
+    (
+        bus_handle, 
+        CR_COMPONENT_ID, 
+        pName,
+        SUBSYSTEM_PREFIX, 
+        &ppComponents, 
+        &size
+    ); 
+    if (ret != CCSP_SUCCESS || size == 0) 
     {
-        ret = CcspBaseIf_discComponentSupportingNamespace
-        (
-            bus_handle, 
-            CR_COMPONENT_ID, 
-            pName,
-            SUBSYSTEM_PREFIX, 
-            &ppComponents, 
-            &size
-        );  
-        if ( ret == CCSP_SUCCESS )
-        {
-            if ( size != 0 ) 
-                break;
-                
-            GWPROV_PRINT("Can't find destination component for %s\n", pName);
-        }
-        else
-        {
-            if((ret == CCSP_MESSAGE_BUS_NOT_EXIST)||(ret == CCSP_CR_ERR_UNSUPPORTED_NAMESPACE))
-            {
-                GWPROV_PRINT("Can't find destination component for %s FailureCount:%d\n", pName,FailureCount);
-            }
-            else 
-            {
-                GWPROV_PRINT("Ccsp msg bus internal error for %s, ret=%d\n", pName, ret);
-            }
-        }
-        FailureCount++;
-        if (FailureCount > MAX_DM_OBJ_RETRIES)
-        {
-            GWPROV_PRINT(" Failed to apply param : %s Tried %d no of times.\n", pName, MAX_DM_OBJ_RETRIES);
-            return 2;
-        }
-        usleep(400*1000);   // 400 msecs
+        GWPROV_PRINT("Error!!! Discover Component Namespace, pName=%s, ret=%d, size=%d\n", pName, ret, size);
+        return 2;
     }
     dst_componentid = ppComponents[0]->componentName;
     dst_pathname    = ppComponents[0]->dbusPath;
@@ -204,7 +180,7 @@ static int GW_SetParameterValue(void* bus_handle, const char *pName, const char 
     param_val[0].parameterValue = (char *)pValue;
     if (!ccsp_type_from_name((char *)pType, &param_val[0].type))
     {
-        GWPROV_PRINT("unrecognized type name: %s\n", pName);
+        GWPROV_PRINT("Error!!! Unrecognized type name: %s\n", pName);
         goto freeMem;
     }
     ret = CcspBaseIf_setParameterValues(
@@ -220,7 +196,7 @@ static int GW_SetParameterValue(void* bus_handle, const char *pName, const char 
 
     if(ret != CCSP_SUCCESS)
     {
-        GWPROV_PRINT("Failed to set %s\n", param_val[0].parameterName);
+        GWPROV_PRINT("Error!!! Setting parameter value (%s)\n", param_val[0].parameterName);
         if (pFaultParameter)
         {
             CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
@@ -838,9 +814,8 @@ static bool GW_SetParam(void* bus_handle, const char *pName, const char *pType, 
     else
         ret = GW_SetParameterValue (bus_handle, pName, pType, pValue);
 
-    /* GW_SetParam() returns failure if destination component not found or bus error. It can still fail
-    for invalid value, etc., but in those cases just retun as success */
-    if (ret <= 1) success=true; 
+    /* GW_SetParam() retuns fail for any failure code to retry */
+    if (ret == 0) success=true; 
 
     /* keep a flag if we ever set a WiFi param so we can apply settings later */
     if (success)
@@ -997,7 +972,7 @@ static void GW_DmObjectListApply(void)
 
     /* Call GW_HandleAliasDmList(), to process gpDmObjectHeadAlias list */
     GW_HandleAliasDmList(bus_handle);
-#if 0
+
     while (pCurr != NULL)
     {
         /* GW_SetParam() only returns failure if the parameter could not be found... it can still fail
@@ -1035,28 +1010,6 @@ static void GW_DmObjectListApply(void)
             pCurr = pCurr->pNext;
         }
     }
-#else
-    // Retry logic is removed as it already taken care in GW_SetParameterValue
-    while (pCurr != NULL)
-    {
-        GW_SetParam(bus_handle, pCurr->Name, GW_MapTr69TypeToDmcliType(pCurr->Type), pCurr->Value);
-
-        if (pCurr == gpDmObjectHead)
-        {
-            gpDmObjectHead = pCurr->pNext;
-        }
-        else
-        {
-            pPrev->pNext = pCurr->pNext;
-        }
-
-        /* free the node */
-        DmObject_t *pOld = pCurr;
-        pCurr = pCurr->pNext;
-        free(pOld);
-    }
-#endif
-
 }
 
 /**************************************************************************/
