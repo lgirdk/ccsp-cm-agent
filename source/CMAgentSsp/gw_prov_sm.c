@@ -1448,6 +1448,7 @@ static void GWP_UpdateERouterMode(void)
 #if !defined(_PLATFORM_RASPBERRYPI_)
                 /* Update ESAFE state */
                 GWP_UpdateEsafeAdminMode(eRouterMode);
+                eSafeDevice_SetErouterOperationMode(eRouterMode);
 #endif
                 if(!once)
                     check_lan_wan_ready();
