@@ -76,6 +76,7 @@
 #include "syscfg/syscfg.h"
 #include "safec_lib_common.h"
 #include <sys/stat.h>
+#include "secure_wrapper.h"
 
 #define  PVALUE_MAX 1023 
 #if defined (FEATURE_RDKB_WAN_MANAGER)
@@ -351,22 +352,15 @@ CosaDmlCMWanUpdateCustomConfig
         BOOL             bValue
     )
 {
-    char command[256];
 
     if (bValue == TRUE)
     {
-        snprintf(command,sizeof(command),"ip addr flush dev %s",DOCSIS_INF_NAME);
-        system(command);
-        snprintf(command,sizeof(command),"ip -6 addr flush dev %s",DOCSIS_INF_NAME);
-        system(command);
-        snprintf(command,sizeof(command),"sysctl -w net.ipv6.conf.%s.accept_ra=0",DOCSIS_INF_NAME);
-        system(command);
-        snprintf(command,sizeof(command),"sysctl -w net.ipv6.conf.%s.disable_ipv6=1",DOCSIS_INF_NAME);
-        system(command); 
-        snprintf(command,sizeof(command),"ip link set %s up",DOCSIS_INF_NAME);
-        system(command);
-        snprintf(command,sizeof(command),"brctl addif %s %s",WAN_PHY_NAME,DOCSIS_INF_NAME);
-        system(command);
+        v_secure_system("ip addr flush dev "DOCSIS_INF_NAME);
+        v_secure_system("ip -6 addr flush dev "DOCSIS_INF_NAME);
+        v_secure_system("sysctl -w net.ipv6.conf."DOCSIS_INF_NAME".accept_ra=0");
+        v_secure_system("sysctl -w net.ipv6.conf."DOCSIS_INF_NAME".disable_ipv6=1");
+        v_secure_system("ip link set "DOCSIS_INF_NAME " up");
+        v_secure_system("brctl addif "WAN_PHY_NAME " "DOCSIS_INF_NAME);
     }
     else
     {
@@ -381,8 +375,7 @@ CosaDmlCMWanUpdateCustomConfig
         if (bridge_mode == 0)
 #endif
         {
-            snprintf(command,sizeof(command),"brctl delif %s %s",WAN_PHY_NAME,DOCSIS_INF_NAME);
-            system(command);
+             v_secure_system("brctl delif " WAN_PHY_NAME " "DOCSIS_INF_NAME);
         }
     }
     UNREFERENCED_PARAMETER(arg);
