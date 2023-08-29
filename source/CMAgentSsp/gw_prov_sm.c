@@ -296,10 +296,10 @@ static const GwpThread_MsgItem gwpthreadMsgArr[] = {
 
 /*! New implementation */
 #if 0
-static void GW_Local_PrintHexStringToStderr(unsigned char *str, unsigned short len);
+static void GW_Local_PrintHexStringToStderr(Uint8 *str, Uint16 len);
 static STATUS GW_TlvParserInit(void);
 #endif
-static void GW_Tr069PaSubTLVParse(unsigned char type, unsigned short length, const unsigned char *value);
+static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value);
 
 #if !defined(INTEL_PUMA7)
 static STATUS GW_UpdateTr069Cfg(void);
@@ -311,7 +311,7 @@ static void check_lan_wan_ready();
 //static TlvParseCallbackStatus_e gotEnableType(Uint8 type, Uint16 length, const Uint8* value);
 
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
-static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(unsigned char type, unsigned short length, const unsigned char *value);
+static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(Uint8 type, Uint16 length, const Uint8* value);
 #endif
 
 /* New implementation !*/
@@ -351,7 +351,7 @@ static int ciscoconnect_started = 0;
 #endif
 
 static int webui_started = 0;
-static unsigned int factory_mode = 0;
+static Uint32 factory_mode = 0;
 static int bridgeModeInBootup = 0;
 static int entryCallbackInited = 0;
 
@@ -518,7 +518,7 @@ static STATUS GW_TlvParserInit(void)
     return STATUS_OK;
 }
 
-static void GW_Local_PrintHexStringToStderr(unsigned char *str, unsigned short len)
+static void GW_Local_PrintHexStringToStderr(Uint8 *str, Uint16 len)
  {
     int i; 
 
@@ -541,7 +541,7 @@ static int IsFileExists (const char *fname)
 
 #define TR069PidFile "/var/tmp/CcspTr069PaSsp.pid"
 
-static bool WriteTr69TlvData(unsigned char typeOfTLV)
+static bool WriteTr69TlvData(Uint8 typeOfTLV)
 {
 	int ret;
 	errno_t rc = -1;
@@ -674,7 +674,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 return TRUE;
 }
 
-static void GW_Tr069PaSubTLVParse(unsigned char type, unsigned short length, const unsigned char *value)
+static void GW_Tr069PaSubTLVParse(Uint8 type, Uint16 length, const Uint8* value)
 {
     errno_t rc = -1;
     CcspTraceInfo(("Entry %s \n",__FUNCTION__));
@@ -791,7 +791,7 @@ static void GW_Tr069PaSubTLVParse(unsigned char type, unsigned short length, con
 
 // Oid_Base = 1.3.6.1.4.1.1429.79.6.1
 #if !defined(INTEL_PUMA7)
-static unsigned char GW_Tr069PaMibOidBase[12] = { 0x06, 0x0c, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x8b, 0x15, 0x4f, 0x06, 0x01 }; 
+static Uint8 GW_Tr069PaMibOidBase[12] = { 0x06, 0x0c, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x8b, 0x15, 0x4f, 0x06, 0x01 }; 
 #endif
 
 /* TR-069 MIB SUB OIDs */
@@ -816,10 +816,10 @@ static unsigned char GW_Tr069PaMibOidBase[12] = { 0x06, 0x0c, 0x2b, 0x06, 0x01, 
 #define SNMP_DATA_BUF_SIZE 1000
 
 #if !defined(INTEL_PUMA7)
-static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, unsigned char value)
+static bool GW_SetTr069PaMibBoolean(Uint8 **cur, Uint8 sub_oid, Uint8 value)
 {
-    unsigned char *mark;
-    unsigned char *current = *cur;
+    Uint8 *mark;
+    Uint8 *current = *cur;
     errno_t rc = -1;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     // SEQUENCE (0x30); Skip total length (1-byte, to be filled later)
@@ -836,16 +836,16 @@ static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, 
     *(current++) = GW_TR069_MIB_DATATYPE_BOOL; 
     *(current++) = GW_TR069_MIB_DATATYPE_LEN_BOOL;
     *(current++) = value;
-    *(mark-1) = (unsigned char)(current - mark);
+    *(mark-1) = (Uint8)(current - mark);
 
     *cur = current;
 	return TRUE;
 }
 
-static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, unsigned char *value)
+static bool GW_SetTr069PaMibString(Uint8 **cur, Uint8 sub_oid, Uint8* value)
 {
-    unsigned char *mark;
-    unsigned char *current = *cur;
+    Uint8 *mark;
+    Uint8 *current = *cur;
     errno_t rc = -1;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     // SEQUENCE (0x30); Skip total length (1-byte, to be filled later)
@@ -860,7 +860,7 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
     *(current++) = sub_oid;
     *(current++) = GW_TR069_MIB_SUB_OID_INSTANCE_NUM;
     *(current++) = GW_TR069_MIB_DATATYPE_STRING; 
-    *(current++) = (unsigned char)strlen((char*)value);
+    *(current++) = (Uint8)strlen((char*)value);
     if(*(current-1))
     {
         rc = memcpy_s(current, SNMP_DATA_BUF_SIZE, value, *(current-1));
@@ -871,33 +871,33 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
         }
         current += *(current-1);
     }
-    *(mark-1) = (unsigned char)(current - mark);
+    *(mark-1) = (Uint8)(current - mark);
 
     *cur = current;
 	return TRUE;
 }
 
-static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
+static STATUS GW_SetTr069PaDataInTLV11Buffer(Uint8* buf, Int* len)
 {
-    unsigned char *ptr = buf;
+    Uint8 *ptr = buf;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     // EnableCWMP
     if(gwTlvsLocalDB.tlv2_flags.EnableCWMP_modified){
-        if(!GW_SetTr069PaMibBoolean(&ptr, GW_TR069_MIB_SUB_OID_ENABLE_CWMP, (unsigned char)(gwTlvsLocalDB.tlv2.EnableCWMP)))
+        if(!GW_SetTr069PaMibBoolean(&ptr, GW_TR069_MIB_SUB_OID_ENABLE_CWMP, (Uint8)(gwTlvsLocalDB.tlv2.EnableCWMP)))
 		{
 			return STATUS_NOK;
 		}
 	}
     // URL
     if(gwTlvsLocalDB.tlv2_flags.URL_modified){
-        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_URL, (unsigned char*)(gwTlvsLocalDB.tlv2.URL)))
+        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_URL, (Uint8*)(gwTlvsLocalDB.tlv2.URL)))
 		{
 		     return STATUS_NOK;	
 		}
     }
     // Username
     if(gwTlvsLocalDB.tlv2_flags.Username_modified){
-        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_USERNAME, (unsigned char*)(gwTlvsLocalDB.tlv2.Username)))
+        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_USERNAME, (Uint8*)(gwTlvsLocalDB.tlv2.Username)))
 		{
 		   return STATUS_NOK;	
 		}
@@ -905,14 +905,14 @@ static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
 
     // Password
     if(gwTlvsLocalDB.tlv2_flags.Password_modified){
-        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_PASSWORD, (unsigned char*)(gwTlvsLocalDB.tlv2.Password)))
+        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_PASSWORD, (Uint8*)(gwTlvsLocalDB.tlv2.Password)))
 		{
 			return STATUS_NOK;
 		}
 	}
     // ConnectionRequestUsername
     if(gwTlvsLocalDB.tlv2_flags.ConnectionRequestUsername_modified){
-        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_CONNREQ_USERNAME, (unsigned char*)(gwTlvsLocalDB.tlv2.ConnectionRequestUsername)))
+        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_CONNREQ_USERNAME, (Uint8*)(gwTlvsLocalDB.tlv2.ConnectionRequestUsername)))
 		{
 			return STATUS_NOK;
 		}
@@ -920,7 +920,7 @@ static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
 
     // ConnectRequestPassword
     if(gwTlvsLocalDB.tlv2_flags.ConnectionRequestPassword_modified){
-        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_CONNREQ_PASSWORD, (unsigned char*)(gwTlvsLocalDB.tlv2.ConnectionRequestPassword)))
+        if(!GW_SetTr069PaMibString(&ptr, GW_TR069_MIB_SUB_OID_CONNREQ_PASSWORD, (Uint8*)(gwTlvsLocalDB.tlv2.ConnectionRequestPassword)))
 		{
 		     return STATUS_NOK;	
 		}
@@ -928,7 +928,7 @@ static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
 
     // ACSOverride
     if(gwTlvsLocalDB.tlv2_flags.AcsOverride_modified){
-        if(!GW_SetTr069PaMibBoolean(&ptr, GW_TR069_MIB_SUB_OID_ALLOW_DOCSIS_CONFIG, (unsigned char)(gwTlvsLocalDB.tlv2.ACSOverride)))
+        if(!GW_SetTr069PaMibBoolean(&ptr, GW_TR069_MIB_SUB_OID_ALLOW_DOCSIS_CONFIG, (Uint8)(gwTlvsLocalDB.tlv2.ACSOverride)))
 		{
 			return STATUS_NOK;
 		}
@@ -942,8 +942,8 @@ static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
 static STATUS GW_UpdateTr069Cfg(void)
 {   
     /* SNMP TLV's data buffer*/
-    unsigned char Snmp_Tlv11Buf[SNMP_DATA_BUF_SIZE] = {0};
-    int Snmp_Tlv11BufLen = 0;
+    Uint8 Snmp_Tlv11Buf[SNMP_DATA_BUF_SIZE] = {0};
+    Int Snmp_Tlv11BufLen = 0;
     STATUS ret = STATUS_OK;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     /*Init the data buffer*/
@@ -989,7 +989,7 @@ static STATUS GW_UpdateTr069Cfg(void)
 
         if(tlv11Resp->len >= sizeof(int))
         {
-            int errorCode = 0;
+            Int32 errorCode = 0;
             memcpy(&errorCode, tlv11Resp->value, sizeof(int));
             /*Need to send the required event*/
             // ReportTlv11Events(errorCode);
@@ -1021,9 +1021,9 @@ label_nok:
 #endif
 
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
-static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(unsigned char type, unsigned short length, const unsigned char *value)
+static TlvParseCallbackStatusExtIf_e GW_setTopologyMode(Uint8 type, Uint16 length, const Uint8* value)
 {
-    unsigned char tpMode = *value;
+    Uint8 tpMode = *value;
     TlvParseCallbackStatusExtIf_e st = TLV_PARSE_CALLBACK_OK_EXTIF;
 
     printf("TLV %d, Len %d : Topology Mode\n", type, length);
@@ -1107,25 +1107,25 @@ static STATUS GWP_UpdateEsafeAdminMode(DOCSIS_Esafe_Db_extIf_e enableMode)
 /*! \fn int GWP_IsGwEnabled(void)
  **************************************************************************
  *  \brief Is gw enabled
- *  \return true/false
+ *  \return True/False
 **************************************************************************/
 static int GWP_IsGwEnabled(void)
 {
 
     if (eRouterMode == DOCESAFE_ENABLE_DISABLE_extIf)
     {
-        return false;
+        return FALSE;
     }
     else
     {
-        return true;
+        return TRUE;
     }
 }
 #endif
 
 /* Coverity Fix CID:56406 MISSING_RETURN */
 void 
-validate_mode(int *bridge_mode, int *eRouterMode)
+validate_mode(int* bridge_mode, int* eRouterMode)
 {
 	if((*eRouterMode < DOCESAFE_ENABLE_DISABLE_extIf)  || (*eRouterMode > DOCESAFE_ENABLE_NUM_ENABLE_TYPES_extIf)
 		|| ((*bridge_mode != BRMODE_ROUTER) && (*bridge_mode != BRMODE_PRIMARY_BRIDGE) && (*bridge_mode != BRMODE_GLOBAL_BRIDGE)))
@@ -1147,7 +1147,7 @@ validate_mode(int *bridge_mode, int *eRouterMode)
  }
 
 #if !defined(_PLATFORM_RASPBERRYPI_)
-void docsis_gotEnable_callback(unsigned char state)
+void docsis_gotEnable_callback(Uint8 state)
 {
     char buf[32] = {0};
 
@@ -1159,13 +1159,13 @@ void docsis_gotEnable_callback(unsigned char state)
 
 #if defined(INTEL_PUMA7)
 /**************************************************************************/
-/*! \fn void docsis_GetRATransInterval_callback(unsigned short raTransInterval)
+/*! \fn void docsis_GetRATransInterval_callback(Uint16 raTransInterval)
  **************************************************************************
  *  \brief Get Router Advertisement Transfer Interval Time
  *  \param[in] raTransInterval - Value
  *  \return None
 **************************************************************************/
-void docsis_GetRATransInterval_callback(unsigned short raTransInterval)
+void docsis_GetRATransInterval_callback(Uint16 raTransInterval)
 {
     int radv_trans_interval = raTransInterval;
     GWP_SysCfgSetInt("ra_interval", radv_trans_interval);  // save the Router Advertisement Transfer Interval Time
@@ -1204,8 +1204,9 @@ static void GWP_DocsisInited(void)
      /* Add paths */
 
 #if !defined (_COSA_BCM_ARM_)
-     eSafeDevice_AddeRouterPhysicalNetworkInterface(IFNAME_ETH_0, true);
-     eSafeDevice_AddeRouterPhysicalNetworkInterface("usb0",true);
+     eSafeDevice_AddeRouterPhysicalNetworkInterface(IFNAME_ETH_0, True);
+           
+     eSafeDevice_AddeRouterPhysicalNetworkInterface("usb0",True);
 #endif
 
 #if !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
@@ -2202,7 +2203,7 @@ static int GWP_act_DocsisLinkUp_callback()
      int outbufsz = sizeof(out_value);
      errno_t rc = -1;
 
-    char *buff = NULL;
+    char* buff = NULL;
     buff = malloc(sizeof(char)*50);
     if(buff == NULL)
     {
@@ -2546,12 +2547,12 @@ static void *GWP_UpdateTr069CfgThread( void *data )
  *  \param[in] SME Handler params
  *  \return 0
 **************************************************************************/
-static void GWP_act_DocsisCfgfile_callback(char *cfgFile)
+static void GWP_act_DocsisCfgfile_callback(Char* cfgFile)
 {
-    char *cfgFileName = NULL;
+    Char *cfgFileName = NULL;
     struct stat cfgFileStat;
-    unsigned char *cfgFileBuff = NULL;
-    unsigned int cfgFileBuffLen;
+    Uint8 *cfgFileBuff = NULL;
+    Uint32 cfgFileBuffLen;
     int cfgFd;
     ssize_t actualNumBytes;
 	pthread_t Updatetr069CfgThread = (pthread_t)NULL;
@@ -2624,7 +2625,7 @@ static void GWP_act_DocsisCfgfile_callback(char *cfgFile)
     oldRouterMode = eRouterMode;
 
 #ifdef HEX_DEBUG
-       unsigned int i;
+       Uint32 i;
        printf("\n");
        for(i = 0; i < cfgFileBuffLen; i++)
        {
@@ -2786,8 +2787,8 @@ static void GWP_act_DocsisInited_callback (void)
 #if !defined(_PLATFORM_RASPBERRYPI_)
     DOCSIS_Esafe_Db_extIf_e eRouterModeTmp;
 #endif
-    unsigned char lladdr[NETUTILS_IPv6_GLOBAL_ADDR_LEN] = {0};
-    unsigned char soladdr[NETUTILS_IPv6_GLOBAL_ADDR_LEN] = {0};
+    Uint8 lladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN / sizeof(Uint8) ] = {0};
+    Uint8 soladdr[ NETUTILS_IPv6_GLOBAL_ADDR_LEN / sizeof(Uint8) ] = {0};
     char soladdrKey[64] = { 0 };
     /* Coverity Issue Fix - CID:73933 : UnInitialised variable */
     char soladdrStr[64] = {0};
