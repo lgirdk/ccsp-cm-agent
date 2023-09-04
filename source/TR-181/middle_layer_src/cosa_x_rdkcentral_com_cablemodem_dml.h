@@ -456,5 +456,70 @@ X_RDKCENTRAL_COM_CableModem_GetParamBoolValue
         BOOL*                       pBool
     );
 
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        X_RDK_LldMarkingRulesSetString
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                char*                       pValue
+            );
+
+    description:
+
+        This function is receive the blob from cloud; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                char*                       pValue
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+
+BOOL
+LldMarkingRules_SetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue
+    );
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        X_RDK_LldMarkingRulesGetString
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                char*                       pValue
+            );
+
+    description:
+
+        This function is receive the blob from cloud; 
+**********************************************************************/
+
+BOOL
+LldMarkingRules_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue
+    );
+
 /** @} */  //END OF GROUP CM_AGENT_APIS
 #endif /* _COSA_RDKCENTRAL_CM_DML_H */

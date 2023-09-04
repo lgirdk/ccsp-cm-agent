@@ -3515,9 +3515,7 @@ void RegisterDocsisCallback()
 #else
     Cgm_GatewayApiProxy_Init();
 #endif
-
 #if defined (WAN_FAILOVER_SUPPORTED)
-	cmAgentRbusInit();
 	SetDocsisLinkdowSignalfunc(CreateThreadandSendCondSignalToPthread);
 #endif
 

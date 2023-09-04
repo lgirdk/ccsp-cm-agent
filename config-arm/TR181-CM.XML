@@ -1153,7 +1153,30 @@
         </parameter>
 	  </parameters>	
 	</object>
-
+        <object>
+         <name>QOS</name>
+          <objectType>object</objectType>
+           <functions></functions>
+            <parameters></parameters>
+             <objects>
+               <object>
+                 <name>X_RDK_LldMarkingRules</name>
+               <objectType>object</objectType>
+               <functions>
+                 <func_GetParamStringValue>LldMarkingRules_GetParamStringValue</func_GetParamStringValue>
+                 <func_SetParamStringValue>LldMarkingRules_SetParamStringValue</func_SetParamStringValue>
+               </functions>
+               <parameters>
+               <parameter>
+               <name>Data</name>
+               <type>string</type>
+               <syntax>string</syntax>
+               <writable>true</writable>
+             </parameter>
+             </parameters>
+           </object>
+         </objects>
+        </object>
 	<object>
 	<name>X_RDKCENTRAL-COM_CableModem</name>
 	<objectType>object</objectType>

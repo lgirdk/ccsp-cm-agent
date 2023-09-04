@@ -73,7 +73,7 @@
 #include "cosa_x_rdkcentral_com_cablemodem_internal.h"
 #include "safec_lib_common.h"
 #include "cosa_cm_common.h"
-
+#include "cm_agent_webconfig_api.h"
 /***********************************************************************
  IMPORTANT NOTE:
 
@@ -1481,5 +1481,78 @@ X_RDKCENTRAL_COM_CableModem_GetParamBoolValue
         *pBool = pMyObject->LLDActiveStatus;
 		return TRUE;
 	}
+    return FALSE;
+}
+
+/**********************************************************************  
+
+    caller:     owner of this object 
+
+    prototype: 
+
+        BOOL
+        X_RDK_LldMarkingRulesSetString
+            (
+                ANSC_HANDLE                 hInsContext,
+                char*                       ParamName,
+                char*                       pValue
+            );
+
+    description:
+
+        This function is called to retrieve Boolean parameter value; 
+
+    argument:   ANSC_HANDLE                 hInsContext,
+                The instance handle;
+
+                char*                       ParamName,
+                The parameter name;
+
+                char*                       pvalue
+                The buffer of returned boolean value;
+
+    return:     TRUE if succeeded.
+
+**********************************************************************/
+BOOL
+LldMarkingRules_SetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue
+    )
+{
+    UNREFERENCED_PARAMETER(hInsContext);
+    AnscTraceWarning(("%s Entering \n", __FUNCTION__));
+    if( AnscEqualString(ParamName, "Data", TRUE))
+    {
+        AnscTraceWarning((" debug %s Entering  - Data - %s \n", __FUNCTION__,pValue));
+        WebConfig_blob_handler(pValue);
+        AnscTraceWarning(("%s exit  - Data - %s \n", __FUNCTION__,pValue));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**********************************************************************
+    description:
+
+        This function is called to print blob data
+**********************************************************************/
+BOOL
+LldMarkingRules_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue
+    )
+{
+    UNREFERENCED_PARAMETER(hInsContext);
+    AnscTraceWarning(("%s Entering \n", __FUNCTION__));
+    if( AnscEqualString(ParamName, "Data", TRUE))
+    {
+        AnscTraceWarning(("%s Entering  - Data - %s \n", __FUNCTION__,pValue));
+	return TRUE;
+    }
     return FALSE;
 }

@@ -964,7 +964,6 @@ int main(int argc, char *argv[])
     CcspTraceInfo(("pthread create docsis registration\n"));
     pthread_create(&docsisclbk_tid, NULL, GWP_docsisregistration_threadfunc, NULL);
 #endif
-	
     cmd_dispatch('e');
     // printf("Calling Docsis\n");
 
@@ -1001,7 +1000,6 @@ int main(int argc, char *argv[])
     {
         close(ret);
     }
-
 
     printf("Entering CM loop\n");
     CcspTraceWarning(("RDKB_SYSTEM_BOOT_UP_LOG : Entering CM loop\n"));

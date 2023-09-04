@@ -73,6 +73,12 @@
 #include "cosa_device_info_dml.h"
 #include "cosa_device_info_internal.h"
 
+#if defined (ENABLE_LLD_SUPPORT) || defined (WAN_FAILOVER_SUPPORTED)
+#include "cosa_rbus_handler_apis.h"
+#include "cm_agent_webconfig_api.h"
+#endif
+
+
 
 /**********************************************************************
 
@@ -164,6 +170,11 @@ CosaDeviceInfoInitialize
 
     /* Initialize middle layer for Device.DeviceInfo.  */
     CosaDmlDIInit(NULL, (PANSC_HANDLE)pMyObject);
+   
+#if defined (ENABLE_LLD_SUPPORT) || defined (WAN_FAILOVER_SUPPORTED)
+    cmAgentRbusInit();
+    webConfigFrameworkInit();
+#endif
 
     return returnStatus;
 }
