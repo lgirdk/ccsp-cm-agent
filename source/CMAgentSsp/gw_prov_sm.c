@@ -1833,7 +1833,6 @@ void GWP_UpdateERouterMode(void)
 #endif
                 if(!once)
                     check_lan_wan_ready();
-                sysevent_set(sysevent_fd_gs, sysevent_token_gs, "erouter_mode-updated", "", 0);
             }
         }
     }
