@@ -1833,7 +1833,6 @@ void GWP_UpdateERouterMode(void)
 #endif
                 if(!once)
                     check_lan_wan_ready();
-                v_secure_system("sysevent set erouter_mode-updated");
             }
         }
     }
