@@ -1846,7 +1846,6 @@ void GWP_UpdateERouterMode(void)
 #endif
                 if(!once)
                     check_lan_wan_ready();
-                v_secure_system("sysevent set erouter_mode-updated");
             }
         }
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
