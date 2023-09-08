@@ -98,7 +98,7 @@ _COSA_CM_DHCP_INFO
     ANSC_IPV4_ADDRESS               Gateway;
     ANSC_IPV4_ADDRESS               TFTPServer;
     char                            TimeServer[64];
-    INT                             TimeOffset;
+    int                             TimeOffset;
     ULONG                           LeaseTimeRemaining;
     char                            RebindTimeRemaining[64];
     char                            RenewTimeRemaining[64];
@@ -211,16 +211,16 @@ _COSA_DML_DOCSISLOG_FULL
     ULONG                           Index;
     ULONG                           EventID;
     ULONG                           EventLevel;
-    CHAR                            Time[64];
-    CHAR                            Description[256];
+    char                            Time[64];
+    char                            Description[256];
 }
 COSA_DML_DOCSISLOG_FULL,  *PCOSA_DML_DOCSISLOG_FULL;
 
 typedef  struct
 _COSA_DML_CPE_LIST
 {
-    CHAR                            IPAddress[32];
-    CHAR                            MACAddress[32];
+    char                            IPAddress[32];
+    char                            MACAddress[32];
 }
 COSA_DML_CPE_LIST,  *PCOSA_DML_CPE_LIST;
 

@@ -234,7 +234,7 @@ CosaDmlRDKCmRegisterDiplexerVariationCallback
  * 
  * @return  Returns 0 when successfully received and processed info, Otherwise returns -1.
  */
-INT CosaDmlRDKCmDiplexerVariationCallback
+int CosaDmlRDKCmDiplexerVariationCallback
     (
         CM_DIPLEXER_SETTINGS stCMDiplexerValue   
     );
@@ -242,12 +242,12 @@ INT CosaDmlRDKCmDiplexerVariationCallback
 /**
  * @brief This function is used to get CM diplexer values from CM HAL API.
  *
- * @param[in] UINT *pUSValue , CM upstream value to be received
- * @param[in] UINT *pDSValue , CM downstream value to be received
+ * @param[in] unsigned int *pUSValue , CM upstream value to be received
+ * @param[in] unsigned int *pDSValue , CM downstream value to be received
  *
  * @return  Returns ANSC_STATUS_SUCCESS when successfully received and processed info, Otherwise returns ANSC_STATUS_FAILURE.
  */
-ANSC_STATUS CosaDmlRDKCmGetDiplexerSettings( UINT *pUSValue, UINT *pDSValue );
+ANSC_STATUS CosaDmlRDKCmGetDiplexerSettings( unsigned int *pUSValue, unsigned int *pDSValue );
 
 #endif /* _CM_HIGHSPLIT_SUPPORTED_ */
 
