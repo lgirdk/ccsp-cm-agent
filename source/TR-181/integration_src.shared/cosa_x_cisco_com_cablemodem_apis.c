@@ -413,7 +413,7 @@ CosaDmlCMWanUpdateCustomConfig
     {
         // Dont remove cm interface from wan bridge if device is in bridge mode.
 #ifdef _COSA_BCM_ARM_
-        INT bridge_mode = 0;
+        int bridge_mode = 0;
         char buf[64];
         if (syscfg_get(NULL, "bridge_mode", buf, sizeof(buf)) == 0)
         {
@@ -437,9 +437,9 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
     if (pMyObject)
     {
         PCOSA_DML_CM_WANCFG pWanCfg = &pMyObject->CmWanCfg;
-        INT ret = -1;
-        INT counter = 0;
-        INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
+        int ret = -1;
+        int counter = 0;
+        int iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
         BOOLEAN rfStatus = FALSE;
         char acSetParamName[256];
         char *acSetParamValue;
@@ -468,7 +468,7 @@ void* ThreadMonitorPhyStatusAndNotify(void *args)
                     if (rfStatus == TRUE)
                     {
                         char buf[64];
-                        INT lastKnownWanMode = WAN_MODE_DOCSIS;
+                        int lastKnownWanMode = WAN_MODE_DOCSIS;
 
                         if (syscfg_get(NULL, "last_wan_mode", buf, sizeof(buf)) == 0)
                         {
@@ -532,8 +532,8 @@ void* ThreadMonitorOperStatusAndNotify(void *args)
         char buf[128];
         char acSetParamName[256];
         BOOL isOperational = FALSE;
-        INT counter = 0;
-        INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
+        int counter = 0;
+        int iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
         char *acSetParamValue;
         ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
         if (pWanCfg)
@@ -598,9 +598,9 @@ void* ThreadUpdateInformMsg(void *args)
         PCOSA_DML_CM_WANCFG pWanCfg = &pMyObject->CmWanCfg;
         if (pWanCfg)
         {
-            INT iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
+            int iWanInstanceNumber = WAN_CM_INTERFACE_INSTANCE_NUM;
             BOOL bEthWanEnable = FALSE;
-            CHAR acSetParamName[256];
+            char acSetParamName[256];
             ANSC_STATUS retval = ANSC_STATUS_SUCCESS;
 
             if (pWanCfg->wanInstanceNumber[0] != '\0') // CID 192713 : Array compared against 0
@@ -621,7 +621,7 @@ void* ThreadUpdateInformMsg(void *args)
             }
             else
             {
-                CHAR wanName[64];
+                char wanName[64];
 
                 syscfg_get(NULL, "wan_physical_ifname", wanName, sizeof(wanName));
 
@@ -1315,7 +1315,7 @@ CosaDmlCMGetResetCount
     )
 {
 	UNREFERENCED_PARAMETER(hContext);
-	INT ret_val=RETURN_ERR;
+	int ret_val=RETURN_ERR;
 	switch(type)
 	{
 		case CABLE_MODEM_RESET:{
