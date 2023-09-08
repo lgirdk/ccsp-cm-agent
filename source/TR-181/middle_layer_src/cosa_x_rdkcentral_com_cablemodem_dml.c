@@ -1389,7 +1389,7 @@ X_RDK_CableModem_GetParamUlongValue
     UNREFERENCED_PARAMETER(hInsContext);
     errno_t rc = -1;
     int ind = -1; 
-    UINT uiUSValue = 0, uiDSValue = 0;
+    unsigned int uiUSValue = 0, uiDSValue = 0;
 
     //Get US and DS Diplexer values from HAL
     CosaDmlRDKCmGetDiplexerSettings( &uiUSValue, &uiDSValue );

@@ -400,7 +400,7 @@ CosaDmlRDKCmRegisterDiplexerVariationCallback
 }
 
 ANSC_STATUS
-CosaDmlRDKCmGetDiplexerSettings( UINT *pUSValue, UINT *pDSValue )
+CosaDmlRDKCmGetDiplexerSettings( unsigned int *pUSValue, unsigned int *pDSValue )
 {
     CM_DIPLEXER_SETTINGS stCMDiplexer = { 0 };
 
@@ -478,9 +478,9 @@ static VOID CosaDmlRDKCmCheckAndDisableMoCA( VOID )
 	}
 }
 
-INT CosaDmlRDKCmDiplexerVariationCallback(CM_DIPLEXER_SETTINGS stCMDiplexerValue)
+int CosaDmlRDKCmDiplexerVariationCallback(CM_DIPLEXER_SETTINGS stCMDiplexerValue)
 {
-	INT ret = 0;
+	int ret = 0;
 
     /*  
 	 *  Upstream (Upper Edge)
