@@ -470,7 +470,7 @@ RegisterDocsisCallback();
 return NULL;
 }
 
-ANSC_STATUS SendMsg( char *pComponent, char *pBus, char *pParamName, char *pParamVal, enum dataType_e type, BOOLEAN bCommit )
+ANSC_STATUS SendMsg( char *pComponent, char *pBus, char *pParamName, char *pParamVal, enum dataType_e type, dbus_bool bCommit )
 {
     extern ANSC_HANDLE bus_handle;
     CCSP_MESSAGE_BUS_INFO *bus_info              = (CCSP_MESSAGE_BUS_INFO *)bus_handle;

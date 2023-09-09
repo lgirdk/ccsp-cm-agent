@@ -410,12 +410,12 @@ static bool IsEthWanEnabled (void)
         {
             if (strcmp(buf, "true") == 0)
             {
-                return TRUE;
+                return true;
             }
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static eGwpThreadType Get_GwpThreadType(char *name)
@@ -551,7 +551,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 		tlvObject=malloc(sizeof(Tr69TlvData));
 		if(tlvObject == NULL)
 		{
-			return FALSE;
+			return false;
 		}
         rc =  memset_s(tlvObject,sizeof(Tr69TlvData), 0, sizeof(Tr69TlvData));
         ERR_CHK(rc);
@@ -588,7 +588,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 	{
 		printf("TLV data file can't be opened \n");
 		CcspTraceInfo((" TLV data file can't be opened \n"));
-		return FALSE;
+		return false;
 	}
 
 	if(tlvObject->FreshBootUp == TRUE)
@@ -606,7 +606,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                 if(rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return false;
                 }
                 break;
             case GW_SUBTLV_TR069_USERNAME_EXTIF:
@@ -644,7 +644,7 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
                     if(rc != EOK)
                     {
                         ERR_CHK(rc);
-                        return FALSE;
+                        return false;
                     }
                 }
                 break;
@@ -669,8 +669,8 @@ static bool WriteTr69TlvData(unsigned char typeOfTLV)
 		fwrite(tlvObject, sizeof(Tr69TlvData), 1, file);
 		fclose(file);
 	}
-	
-return TRUE;
+
+	return true;
 }
 
 static void GW_Tr069PaSubTLVParse(unsigned char type, unsigned short length, const unsigned char *value)
@@ -827,7 +827,7 @@ static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, 
     if(rc != EOK)
     {
         ERR_CHK(rc);
-        return FALSE;
+        return false;
     }
     current += 12;  
     *(current++) = sub_oid;
@@ -838,7 +838,7 @@ static bool GW_SetTr069PaMibBoolean(unsigned char **cur, unsigned char sub_oid, 
     *(mark-1) = (unsigned char)(current - mark);
 
     *cur = current;
-	return TRUE;
+	return true;
 }
 
 static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, unsigned char *value)
@@ -853,7 +853,7 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
     if(rc != EOK)
     {
         ERR_CHK(rc);
-        return FALSE;
+        return false;
     }
     current += 12;  
     *(current++) = sub_oid;
@@ -866,14 +866,14 @@ static bool GW_SetTr069PaMibString(unsigned char **cur, unsigned char sub_oid, u
         if(rc != EOK)
         {
            ERR_CHK(rc);
-           return FALSE;
+           return false;
         }
         current += *(current-1);
     }
     *(mark-1) = (unsigned char)(current - mark);
 
     *cur = current;
-	return TRUE;
+	return true;
 }
 
 static STATUS GW_SetTr069PaDataInTLV11Buffer(unsigned char *buf, int *len)
@@ -1959,7 +1959,7 @@ static void *GWP_sysevent_threadfunc(void *data)
            CcspTraceInfo((" %s : name = %s, val = %s \n", __FUNCTION__, name, val));
             eGwpThreadType ret_value;
             ret_value = Get_GwpThreadType(name);
-            if (TRUE == IsEthWanEnabled())
+            if (IsEthWanEnabled() == true)
             {
                 if (ret_value == SYSTEM_RESTART)
                 {
@@ -2075,7 +2075,7 @@ static void GWP_act_DocsisLinkDown_callback_1()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (IsEthWanEnabled() == true)
     {
         return;
     }
@@ -2099,7 +2099,7 @@ static void GWP_act_DocsisLinkDown_callback_2()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (IsEthWanEnabled() == true)
     {
         return;
     }
@@ -2173,7 +2173,7 @@ static int GWP_act_DocsisLinkUp_callback()
 	}
 #endif
 
-    if (TRUE == IsEthWanEnabled())
+    if (IsEthWanEnabled() == true)
     {
         return -1;
     }
@@ -2902,7 +2902,7 @@ static void GWP_act_DocsisInited_callback (void)
     /* Disconnect docsis LB */
     printf("Disconnecting DOCSIS local bridge\n");
         CcspTraceInfo((" Disconnecting DOCSIS local bridge\n"));
-    connectLocalBridge(FALSE);
+    connectLocalBridge(false);
 
     /* This is an SRN, reply */
     printf("Got Docsis INIT - replying\n");
@@ -3329,7 +3329,7 @@ void *GWP_EventHandler(void *arg)
         }
         v_secure_system("dmcli eRT setv %s string %s true",WAN_INTERFACE_PHY_STATUS_PARAM_NAME,paramValue);
  
-        //CosaDmlSetParamValues(/*WAN_COMPONENT_NAME*/"eRT.com.cisco.spvtg.ccsp.lmlite", /*WAN_DBUS_PATH*/"/com/cisco/spvtg/ccsp/lmlite", paramName, paramValue, ccsp_string, TRUE);
+        //CosaDmlSetParamValues(/*WAN_COMPONENT_NAME*/"eRT.com.cisco.spvtg.ccsp.lmlite", /*WAN_DBUS_PATH*/"/com/cisco/spvtg/ccsp/lmlite", paramName, paramValue, ccsp_string, true);
 
     } while(1);
    pthread_exit(NULL);
@@ -3527,7 +3527,7 @@ void RegisterDocsisCallback()
     obj = (appCallBack*)malloc(sizeof(appCallBack));
 
 #if defined(INTEL_PUMA7) 
-    if (TRUE == IsEthWanEnabled())
+    if (true == IsEthWanEnabled())
     {
         GWP_act_ProvEntry_callback();
     }
