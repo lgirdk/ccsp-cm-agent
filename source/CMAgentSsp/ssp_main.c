@@ -201,7 +201,7 @@ int  cmd_dispatch(int  command)
             }
 
 
-#ifdef ENABLE_RDK_WANMANAGER
+#if defined(ENABLE_RDK_WANMANAGER) && !defined (WAN_MANAGER_UNIFICATION_ENABLED)
                 CcspTraceInfo(("pthread create boot inform \n"));
                 pthread_create(&bootInformThreadId, NULL, &ThreadBootInformMsg, NULL);
 #endif

@@ -185,14 +185,27 @@ void GWPROV_PRINT(const char *format, ...)
 #define WAN_COMPONENT_NAME                "eRT.com.cisco.spvtg.ccsp.wanmanager"
 
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+//string map for WanManager IP.Mode DML values
+static const char * const IpModeString[] =
+{
+[DOCESAFE_ENABLE_DISABLE_extIf] = "No IP",
+[DOCESAFE_ENABLE_IPv4_extIf] = "IPv4 Only",
+[DOCESAFE_ENABLE_IPv6_extIf] = "IPv6 Only",
+[DOCESAFE_ENABLE_IPv4_IPv6_extIf] = "Dual Stack",
+[DOCESAFE_ENABLE_NUM_ENABLE_TYPES_extIf] = "Dual Stack"
+};
+
+#define WAN_INTERFACE_IPMODE_PARAM_NAME         "Device.X_RDK_WanManager.Interface.1.VirtualInterface.1.IP.Mode"
 #define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterface"
-#define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterfaceStatus"
-#else
+#define WAN_INTERFACE_PHY_STATUS_PARAM_NAME     "Device.X_RDK_WanManager.Interface.1.BaseInterfaceStatus"
+
+#else /* WAN_MANAGER_UNIFICATION_ENABLED */
 #define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Path"
 #define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Status"
-#endif /* */
+#endif /* WAN_MANAGER_UNIFICATION_ENABLED */
 
 #define DOCSISLINKDOWN_TESTFILE "/tmp/.DocsisLinkDown_TestRunning.txt"
+
 typedef enum {
     EVENT_GWP_NONE = -1,
     EVENT_GWP_LINK_UP,
@@ -1400,7 +1413,7 @@ static void GWP_UpdateERouterMode(void)
             v_secure_system("service_dslite clear &");
 #endif
             v_secure_system("dmcli eRT setv Device.X_CISCO_COM_DeviceControl.LanManagementEntry.1.LanMode string bridge-static");
-            
+
             GWP_DisableERouter();
             GWP_SysCfgSetInt("last_erouter_mode", eRouterMode);  // save the new mode only
               if (syscfg_commit() != 0) 
@@ -1454,6 +1467,11 @@ static void GWP_UpdateERouterMode(void)
                 v_secure_system("sysevent set erouter_mode-updated");
             }
         }
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+        //Update IP mode to WanManager ISM
+        CcspTraceInfo((" %s : updating WanManager Ip mode: %s\n", __FUNCTION__, IpModeString[eRouterMode]));
+        v_secure_system("dmcli eRT setv %s string %s ",WAN_INTERFACE_IPMODE_PARAM_NAME, IpModeString[eRouterMode]);
+#endif
     }
 #if !defined(INTEL_PUMA7)
     sendPseudoBridgeModeMessage((active_mode != BRMODE_ROUTER) ? TRUE : FALSE);
@@ -2066,7 +2084,10 @@ static void *GWP_sysevent_threadfunc(void *data)
 **************************************************************************/
 static void GWP_act_DocsisLinkDown_callback_1()
 {
-
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+    CcspTraceInfo(("%s %d - %s updated to Down\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME));
+    v_secure_system("dmcli eRT setv %s string Down ",WAN_INTERFACE_PHY_STATUS_PARAM_NAME);
+#endif
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
 	{
@@ -2090,7 +2111,10 @@ static void GWP_act_DocsisLinkDown_callback_1()
 
 static void GWP_act_DocsisLinkDown_callback_2()
 {
-
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+    CcspTraceInfo(("%s %d - %s updated to Down\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME));
+    v_secure_system("dmcli eRT setv %s string Down ",WAN_INTERFACE_PHY_STATUS_PARAM_NAME);
+#endif
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
 	{
@@ -2157,6 +2181,53 @@ static void get_dateanduptime(char *buffer, int *uptime)
 }
 
 static int logged_docsis_reg_complete_uptime = 0;
+
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+#define MONITOR_OPER_STATUS_MAX_TIMEOUT 240
+#define MONITOR_OPER_STATUS_QUERY_INTERVAL 10
+static bool g_OperStatusThread_Running = false;
+void* UpdateOperStatusThread( void *arg)
+{
+    char buf[128];
+    INT counter = 0;
+    char paramValue [32] = "Down";
+    g_OperStatusThread_Running = true;
+    pthread_detach(pthread_self());
+
+    CcspTraceInfo(("%s %d -  Started\n", __FUNCTION__, __LINE__));
+    while(1)
+    {
+        memset(buf,0,sizeof(buf));
+        if ( 0 == access( "/tmp/cmoff" , F_OK ) )
+        {
+            sleep(1);
+            continue;
+        }
+
+        if(docsis_getCMStatus(buf) == RETURN_OK)
+        {
+            CcspTraceInfo(("%s %d getCMStatus %s \n", __FUNCTION__, __LINE__,buf));
+            if (strncmp(buf,"OPERATIONAL",sizeof(buf)) == 0)
+            {
+                snprintf(paramValue,sizeof(paramValue),"Up");
+                break;
+            }
+        }
+        if (counter >= MONITOR_OPER_STATUS_MAX_TIMEOUT)
+        {
+            break;
+        }
+        sleep(MONITOR_OPER_STATUS_QUERY_INTERVAL);
+        counter += MONITOR_OPER_STATUS_QUERY_INTERVAL;
+    }
+    g_OperStatusThread_Running = false;
+    CcspTraceInfo(("%s %d - %s updated to %s\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME, paramValue));
+    v_secure_system("dmcli eRT setv %s string %s true",WAN_INTERFACE_PHY_STATUS_PARAM_NAME,paramValue);
+    CcspTraceInfo(("%s %d -  Exit\n", __FUNCTION__, __LINE__));
+    pthread_exit(NULL);
+    return arg;
+}
+#endif
 
 static int GWP_act_DocsisLinkUp_callback()
 {
@@ -3313,7 +3384,30 @@ void *GWP_EventHandler(void *arg)
         {
             case EVENT_GWP_LINK_UP:
             {
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+                if(!g_OperStatusThread_Running)
+                {
+                    int ret = -1;
+                    pthread_t OperStatusThreadId;
+                    //create thread
+                    ret = pthread_create( &OperStatusThreadId, NULL, &UpdateOperStatusThread, NULL );
+
+                    if( 0 != ret )
+                    {
+                        CcspTraceError(("%s %d - Failed to start UpdateOperStatusThread Error:%d\n", __FUNCTION__, __LINE__, ret));
+                    }
+                    else
+                    {
+                        CcspTraceInfo(("%s %d - UpdateOperStatusThread Successfully\n", __FUNCTION__, __LINE__));
+                    }
+                }else
+                {
+                    CcspTraceInfo(("%s %d - UpdateOperStatusThread Already running\n", __FUNCTION__, __LINE__));
+                }
+                continue;
+#endif
                 snprintf(paramValue,sizeof(paramValue),"Up");
+
             }
             break;
             case EVENT_GWP_LINK_DOWN2:
@@ -3327,6 +3421,7 @@ void *GWP_EventHandler(void *arg)
             }
             break;
         }
+        CcspTraceInfo(("%s %d - %s updated to %s\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME, paramValue));
         v_secure_system("dmcli eRT setv %s string %s true",WAN_INTERFACE_PHY_STATUS_PARAM_NAME,paramValue);
  
         //CosaDmlSetParamValues(/*WAN_COMPONENT_NAME*/"eRT.com.cisco.spvtg.ccsp.lmlite", /*WAN_DBUS_PATH*/"/com/cisco/spvtg/ccsp/lmlite", paramName, paramValue, ccsp_string, true);
