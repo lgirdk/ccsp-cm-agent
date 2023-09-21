@@ -192,6 +192,7 @@ void GWPROV_PRINT(const char *format, ...)
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
 #define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterface"
 #define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.Interface.1.BaseInterfaceStatus"
+#define WAN_INTERFACE_IP_MODE        "Device.X_RDK_WanManager.Interface.1.VirtualInterface.1.IP.Mode"
 #else
 #define WAN_INTERFACE_PHYPATH_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Path"
 #define WAN_INTERFACE_PHY_STATUS_PARAM_NAME        "Device.X_RDK_WanManager.CPEInterface.1.Phy.Status"
@@ -4103,6 +4104,11 @@ void *GWP_EventHandler(void *arg)
         }
 #endif
 
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+        GWPROV_PRINT("%s:%d: eRouterMode value before setting IP Mode : %d \n", __FUNCTION__, __LINE__,eRouterMode);
+        v_secure_system("dmcli eRT setv %s string %s",WAN_INTERFACE_IP_MODE,eRouterMode == DOCESAFE_ENABLE_IPv4_IPv6_extIf ?"Dual Stack":
+        eRouterMode == DOCESAFE_ENABLE_IPv6_extIf?"IPv6 Only": eRouterMode == DOCESAFE_ENABLE_IPv4_extIf?"IPv4 Only":"No IP");
+#endif
         GWPROV_PRINT("%s:%d: going to wait in mq receive \n", __FUNCTION__, __LINE__);
         /* receive the message */
         bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
