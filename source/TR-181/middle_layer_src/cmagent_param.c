@@ -23,7 +23,7 @@ int processcmagentdoc( cmagentdoc_t *gd, int num, ...);
 
 cmagentdoc_t* cmagentdocConvert( const void *buf, size_t len )
 {
-	return comp_helper_convert( buf, len, sizeof(cmagentdoc_t), "LLD-QOS-control", 
+	return comp_helper_convert( buf, len, sizeof(cmagentdoc_t), LLD_SUBDOC, 
                             MSGPACK_OBJECT_MAP, true,
                            (process_fn_t) processcmagentdoc,
                            (destroy_fn_t) cmagentdocDestroy );

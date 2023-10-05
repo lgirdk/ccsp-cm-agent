@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <msgpack.h>
 
+#define LLD_SUBDOC "lldqoscontrol"
+
 typedef struct
 {
     bool enable;

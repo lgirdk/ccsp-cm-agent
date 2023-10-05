@@ -139,7 +139,7 @@ pErr processcmagentWebConfigRequest(void *Data)
 
     cmagentdoc_t *cd = (cmagentdoc_t *) Data ;
 
-    CcspTraceInfo(("%s : LLD-QOS-control configurartion recieved\n",__FUNCTION__));
+    CcspTraceInfo(("%s :  lldqoscontrol configurartion recieved\n",__FUNCTION__));
 
     int ret1  = LldMarkingRules_Enable( cd ); //TODO: Need add logic in this function
     if ( 0 != ret1 )
@@ -247,7 +247,7 @@ int setcmagentBlobVersion(char* subdoc,uint32_t version)
 
 void webConfigFrameworkInit()
 {
-    char *sub_docs[SUBDOC_COUNT+1]= {"LLD-QOS-control"};
+    char *sub_docs[SUBDOC_COUNT+1]= {LLD_SUBDOC};
     int i;
     blobRegInfo *blobData;
 
@@ -330,7 +330,7 @@ bool WebConfig_blob_handler(char *Encoded_data)
                 execDataGm->version = gd->version; 
                 execDataGm->numOfEntries = 0; 
                             
-                strncpy(execDataGm->subdoc_name,"LLD-QOS-control",sizeof(execDataGm->subdoc_name)-1);
+                strncpy(execDataGm->subdoc_name,LLD_SUBDOC,sizeof(execDataGm->subdoc_name)-1);
                             
                 execDataGm->user_data = (void*) gd ;
                 execDataGm->calcTimeout = NULL ;
@@ -357,7 +357,7 @@ bool WebConfig_blob_handler(char *Encoded_data)
             free(decodeMsg);
             decodeMsg = NULL;
         }
-        CcspTraceWarning(("Corrupted LLD-QOS-control enable msgpack value\n"));
+        CcspTraceWarning(("Corrupted lldqoscontrol enable msgpack value\n"));
         return FALSE;
     }
 }
