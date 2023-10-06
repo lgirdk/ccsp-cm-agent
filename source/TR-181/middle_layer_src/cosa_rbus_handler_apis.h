@@ -68,6 +68,7 @@ void publishCableModemRfSignalStatus();
 //void publishLLDEnableValueChange(bool newValue);
 
 void publishCableModemRfSignalStatusValue(bool link_status);
+rbusError_t cmAgentRbusInit();
 #endif
 
 #if defined (ENABLE_LLD_SUPPORT)
@@ -88,12 +89,8 @@ rbusError_t notifyChangeEvent(char* event_name , bool eventNewData);
 void initLLDEnable();
 
 void publishLLDEnableValueChange(bool newValue);
-
+rbusError_t cmAgentLldRbusInit();
 #endif
-
-#if defined (ENABLE_LLD_SUPPORT) || defined (WAN_FAILOVER_SUPPORTED)
-rbusError_t cmAgentRbusInit();
-rbusError_t sendBoolUpdateEvent(char* event_name , bool eventNewData, bool eventOldData);
+rbusError_t sendBoolUpdateEvent(rbusHandle_t cm_handle, char* event_name , bool eventNewData, bool eventOldData);
 char const* GetParamName(char const* path);
-#endif
 #endif

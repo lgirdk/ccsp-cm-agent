@@ -29,10 +29,8 @@
 #include <sysevent/sysevent.h>
 #include "syscfg/syscfg.h"
 
-rbusHandle_t cm_rbus_handle;
-
 #if defined (WAN_FAILOVER_SUPPORTED)
-
+rbusHandle_t cm_rbus_handle;
 CmAgent_Link_Status cmAgent_Link_Status;
 unsigned int gSubscribersCount = 0;
 
@@ -52,8 +50,6 @@ Rbus_CMAgent_SetParamBoolValue
     );
 unsigned int g_CMRfSigStatSubCount = 0;
 
-#endif
-
 #define NUM_OF_RBUS_PARAMS sizeof(cmAgentRbusDataElements)/sizeof(cmAgentRbusDataElements[0])
 /***********************************************************************
 
@@ -61,17 +57,28 @@ unsigned int g_CMRfSigStatSubCount = 0;
 
  ***********************************************************************/
 rbusDataElement_t cmAgentRbusDataElements[] = {
-#if defined (WAN_FAILOVER_SUPPORTED)
 	{DOCSIS_LINK_STATUS_TR181, RBUS_ELEMENT_TYPE_EVENT, {getBoolHandler, NULL, NULL, NULL, eventSubHandler, NULL}},
 	{DOCSIS_LINKDOWN_TR181, RBUS_ELEMENT_TYPE_EVENT, {getBoolHandler, SetBoolHandler, NULL, NULL, NULL, NULL}},
 	{DOCSIS_LINKDOWNTIMEOUT_TR181, RBUS_ELEMENT_TYPE_EVENT, {getuintHandler, SetUintHandler, NULL, NULL, NULL, NULL}},
 	{CABLE_MODEM_RF_SIGNAL_STATUS, RBUS_ELEMENT_TYPE_EVENT, {getBoolHandler, NULL, NULL, NULL, eventSubHandler, NULL}},   
-#endif
-#if defined (ENABLE_LLD_SUPPORT)
-        {LLD_ENABLE_TR181, RBUS_ELEMENT_TYPE_EVENT, {getLLDBoolHandler, setLLDEnableBoolHandler, NULL, NULL, lldEventSubHandler, NULL}},
-#endif
 };
+#endif
+
 #if defined (ENABLE_LLD_SUPPORT)
+
+rbusHandle_t cm_lld_rbus_handle;
+
+#define NUM_OF_LLD_RBUS_PARAMS sizeof(cmAgentLldRbusDataElements)/sizeof(cmAgentLldRbusDataElements[0])
+/***********************************************************************
+
+  Data Elements declaration:
+
+ ***********************************************************************/
+rbusDataElement_t cmAgentLldRbusDataElements[] = {
+
+        {LLD_ENABLE_TR181, RBUS_ELEMENT_TYPE_EVENT, {getLLDBoolHandler, setLLDEnableBoolHandler, NULL, NULL, lldEventSubHandler, NULL}},
+};
+
 
 BOOL
 Rbus_LLDEnabled_SetParamBoolValue
@@ -335,7 +342,7 @@ void publishDocsisLinkStatus(bool link_status)
 	CcspTraceInfo(("Publishing DOCSIS link status with updated value=%s\n", cmAgent_Link_Status.DocsisLinkStatus ? "true" : "false"));
 	if (gSubscribersCount > 0)
 	{
-		ret = sendBoolUpdateEvent(DOCSIS_LINK_STATUS_TR181, cmAgent_Link_Status.DocsisLinkStatus, oldDocsisLinkStatus);
+		ret = sendBoolUpdateEvent(cm_rbus_handle,DOCSIS_LINK_STATUS_TR181, cmAgent_Link_Status.DocsisLinkStatus, oldDocsisLinkStatus);
 		if(ret == RBUS_ERROR_SUCCESS) {
 			CcspTraceInfo(("Published DOCSIS link status with updated value.\n"));
 		}
@@ -465,15 +472,12 @@ void publishCableModemRfSignalStatusValue(bool link_status)
 	CcspTraceInfo(("Publishing cable modem Rf signal status with updated value=%s\n", cmAgent_Link_Status.CableModemRfSignalStatus ? "true" : "false"));
 	if (g_CMRfSigStatSubCount > 0)
 	{
-		ret = sendBoolUpdateEvent(CABLE_MODEM_RF_SIGNAL_STATUS, cmAgent_Link_Status.CableModemRfSignalStatus, oldCableModemRfSignalStatus);
+		ret = sendBoolUpdateEvent(cm_rbus_handle,CABLE_MODEM_RF_SIGNAL_STATUS, cmAgent_Link_Status.CableModemRfSignalStatus, oldCableModemRfSignalStatus);
 		if(ret == RBUS_ERROR_SUCCESS) {
 			CcspTraceInfo(("Published cable modem Rf signal status with updated value.\n"));
 		}
 	}
 }
-#endif
-
-#if defined (ENABLE_LLD_SUPPORT) || defined (WAN_FAILOVER_SUPPORTED)
 /***********************************************************************
 
   cmAgentRbusInit(): Initialize Rbus and data elements
@@ -505,36 +509,18 @@ rbusError_t cmAgentRbusInit()
         return rc;
     }
 
-#if defined (WAN_FAILOVER_SUPPORTED)    
-    // Initialize CmAgent_Link_Status struct with default values 
+    //Initialize CmAgent_Link_Status struct with default values 
     initLinkStatus();
-#endif
-#if defined (ENABLE_LLD_SUPPORT)    
-   //Initialize LLD enable struct with default values
-    initLLDEnable();
-#endif
     return rc;
 }
-
-/*******************************************************************************
-
- GetParamName from arg and return parameter name
-
- ********************************************************************************/
-char const* GetParamName(char const* path)
-{
-    char const* p = path + strlen(path);
-    while(p > path && *(p-1) != '.')
-        p--;
-    return p;
-}
+#endif
 
 /*******************************************************************************
 
   sendUpdateEvent(): publish event after event value gets updated
 
  ********************************************************************************/
-rbusError_t sendBoolUpdateEvent(char* event_name , bool eventNewData, bool eventOldData)
+rbusError_t sendBoolUpdateEvent(rbusHandle_t cm_handle, char* event_name , bool eventNewData, bool eventOldData)
 {
     rbusEvent_t event;
     rbusObject_t data;
@@ -562,7 +548,7 @@ rbusError_t sendBoolUpdateEvent(char* event_name , bool eventNewData, bool event
     event.data = data;
     event.type = RBUS_EVENT_VALUE_CHANGED;
     //publish the event
-    ret = rbusEvent_Publish(cm_rbus_handle, &event);
+    ret = rbusEvent_Publish(cm_handle, &event);
     if(ret != RBUS_ERROR_SUCCESS) {
         CcspTraceWarning(("rbusEvent_Publish for %s failed: %d\n", event_name, ret));
     }
@@ -573,9 +559,52 @@ rbusError_t sendBoolUpdateEvent(char* event_name , bool eventNewData, bool event
     rbusObject_Release(data);
     return ret;
 }
-#endif
+
+
+/*******************************************************************************
+
+ GetParamName from arg and return parameter name
+
+ ********************************************************************************/
+char const* GetParamName(char const* path)
+{
+    char const* p = path + strlen(path);
+    while(p > path && *(p-1) != '.')
+        p--;
+    return p;
+}
 
 #if defined (ENABLE_LLD_SUPPORT)
+
+rbusError_t cmAgentLldRbusInit()
+{
+    int rc = RBUS_ERROR_SUCCESS;
+    if(RBUS_ENABLED != rbus_checkStatus())
+    {
+        CcspTraceWarning(("%s: RBUS not available. Events are not supported\n", __FUNCTION__));
+        return RBUS_ERROR_BUS_ERROR;
+    }
+    rc = rbus_open(&cm_lld_rbus_handle, "CMAgentLLDEnable");
+    if (rc != RBUS_ERROR_SUCCESS)
+    {
+        CcspTraceWarning(("CMAgent rbus initialization failed\n"));
+        rc = RBUS_ERROR_NOT_INITIALIZED;
+        return rc;
+    }
+    
+    // Register data elements
+    rc = rbus_regDataElements(cm_lld_rbus_handle, NUM_OF_LLD_RBUS_PARAMS, cmAgentLldRbusDataElements);
+
+    if (rc != RBUS_ERROR_SUCCESS)
+    {
+        CcspTraceWarning(("LLD rbus register data elements failed\n"));
+        rc = rbus_close(cm_lld_rbus_handle);
+        return rc;
+    }
+    initLLDEnable();
+    return rc;
+}
+
 void initLLDEnable()
 {
     char LLDEnable[16];
@@ -607,7 +636,7 @@ void publishLLDEnableValueChange(bool newValue)
 		
     CcspTraceInfo(("Publishing LLDEnable status updated value=%s\n", cmAgent_Lld_Enable.lldenable? "true" : "false"));
 
-    ret = sendBoolUpdateEvent(LLD_ENABLE_TR181, cmAgent_Lld_Enable.lldenable, oldValue);
+    ret = sendBoolUpdateEvent(cm_lld_rbus_handle, LLD_ENABLE_TR181, cmAgent_Lld_Enable.lldenable, oldValue);
     if(ret == RBUS_ERROR_SUCCESS) {
         CcspTraceInfo(("Published LLDEnable with updated value.\n"));
     }
@@ -714,7 +743,6 @@ rbusError_t getLLDBoolHandler(rbusHandle_t handleLld, rbusProperty_t property, r
 
     return RBUS_ERROR_SUCCESS;
 }
-
 
 /***********************************************************************
 
