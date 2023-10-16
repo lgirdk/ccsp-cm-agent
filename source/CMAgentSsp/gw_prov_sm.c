@@ -2687,9 +2687,14 @@ static void GWP_act_DocsisCfgfile_callback(char *cfgFile)
     }
     else if ((unsigned int)actualNumBytes != cfgFileBuffLen)
     {
-        printf("eSafe Config file \"%s\", actual len (%d) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen);
-        CcspTraceInfo((" eSafe Config file \"%s\", actual len (%d) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen));
-        goto closeFile;
+	#ifdef _64BIT_ARCH_SUPPORT_
+        	printf("eSafe Config file \"%s\", actual len (%lu) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen);
+        	CcspTraceInfo((" eSafe Config file \"%s\", actual len (%lu) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen));
+        #else
+		printf("eSafe Config file \"%s\", actual len (%d) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen);
+		CcspTraceInfo((" eSafe Config file \"%s\", actual len (%d) different than stat (%d), aborting Config file\n", cfgFileName, actualNumBytes, cfgFileBuffLen));
+	#endif
+	goto closeFile;
     }
 
     oldRouterMode = eRouterMode;
@@ -3333,7 +3338,11 @@ void *GWP_EventHandler(void *arg)
     mqd_t mq;
     struct mq_attr attr;
     char buffer[MAX_SIZE + 1] = {0};
-    printf ("%u",(unsigned int) arg);
+    #ifdef _64BIT_ARCH_SUPPORT_
+	printf ("%p",(void *) arg);
+    #else
+	printf ("%u",(unsigned int) arg);
+    #endif
     /* initialize the queue attributes */
     attr.mq_flags = 0;
     attr.mq_maxmsg = 50;
