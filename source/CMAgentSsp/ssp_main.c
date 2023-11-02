@@ -152,7 +152,9 @@ void *pBusHandle  = NULL;
 static pthread_t docsisclbk_tid;
 pthread_t bootInformThreadId;
 extern void RegisterDocsisCallback();
+#ifdef AUTOWAN_ENABLE
 void* ThreadBootInformMsg(void *arg);
+#endif
 #endif
 void
 CcspBaseIf_deadlock_detection_log_print
@@ -206,7 +208,7 @@ int  cmd_dispatch(int  command)
             }
 
 
-#if defined(ENABLE_RDK_WANMANAGER) && !defined (WAN_MANAGER_UNIFICATION_ENABLED)
+#if defined(ENABLE_RDK_WANMANAGER) && !defined (WAN_MANAGER_UNIFICATION_ENABLED) && defined (AUTOWAN_ENABLE)
                 CcspTraceInfo(("pthread create boot inform \n"));
                 pthread_create(&bootInformThreadId, NULL, &ThreadBootInformMsg, NULL);
 #endif
@@ -766,6 +768,7 @@ int InitBootInformInfo(WAN_BOOTINFORM_MSG *pMsg)
     return 0;
 }
 
+#ifdef AUTOWAN_ENABLE
 void* ThreadBootInformMsg(void *arg)
 {
     WAN_BOOTINFORM_MSG msg = {0};
@@ -804,7 +807,7 @@ void* ThreadBootInformMsg(void *arg)
     }
     return arg;
 }
-
+#endif /* AUTOWAN_ENABLE */
 #endif
 #if (defined(INTEL_PUMA7))
 static bool drop_root()
