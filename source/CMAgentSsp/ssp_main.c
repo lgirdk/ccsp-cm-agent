@@ -89,9 +89,7 @@ static cap_user appcaps;
 
 #define WAN_PHYIF_NAME_PRIMARY "erouter0"
 
-#ifdef _LG_MV2_PLUS_
-#define WAN_PHYIF_DOCSIS_NAME "lbr0"
-#elif defined (_COSA_BCM_ARM_)
+#ifdef _COSA_BCM_ARM_
 #define WAN_PHYIF_DOCSIS_NAME "cm0"
 #elif defined(INTEL_PUMA7)
 #define WAN_PHYIF_DOCSIS_NAME "dpdmta1"
