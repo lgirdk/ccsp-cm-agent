@@ -128,7 +128,7 @@ ANSC_STATUS CosaDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status);
  *
  * @return  Returns ANSC_STATUS_SUCCESS on successfully getting download protocol.
  */
-ANSC_STATUS CosaDmlDIGetProtocol(char *Protocol);
+ANSC_STATUS CosaDmlDIGetProtocol(char *protocol, size_t len);
 
 #if defined (_COSA_INTEL_XB3_ARM_) || defined (_XB6_PROD_REQ_) || defined (_XB6_PRODUCT_REQ_)
 /**

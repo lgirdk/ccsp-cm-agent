@@ -224,7 +224,6 @@ DeviceInfo_GetParamStringValue
     UNREFERENCED_PARAMETER(hInsContext);
     PCOSA_DATAMODEL_DEVICEINFO     pMyObject = (PCOSA_DATAMODEL_DEVICEINFO)g_pCosaBEManager->hDI;
     char DL_Status[128]={0};
-    char Protocol[16]={0};
     errno_t rc = -1;
     int ind = -1;
     /* check the parameter name and return the corresponding value */
@@ -256,26 +255,18 @@ DeviceInfo_GetParamStringValue
     rc = strcmp_s("X_RDKCENTRAL-COM_FirmwareDownloadProtocol",strlen("X_RDKCENTRAL-COM_FirmwareDownloadProtocol"),ParamName,&ind);
     ERR_CHK(rc);
     if( (rc == EOK) && (!ind))
-
     {
-    	 if(pMyObject->Download_Control_Flag)
-   	 {
-	        /* collect value */
-	        CosaDmlDIGetProtocol(Protocol);
-	        if ( _ansc_strlen(Protocol) >= *pUlSize )
+        if (pMyObject->Download_Control_Flag)
+        {
+            if (*pUlSize < 16 + 1)
 	        {
-	            *pUlSize = _ansc_strlen(Protocol);
-	            return 1;
-	       }
+                *pUlSize = 16 + 1;
+                return 1;
+            }
 
-                char *pProtocol = Protocol;
-	        rc = strcpy_s(pValue,*pUlSize, pProtocol);
-                if(rc != EOK)
-                {
-                    ERR_CHK(rc);
-                    return -1;
-                 }
-    	 }
+            CosaDmlDIGetProtocol(pValue, *pUlSize);
+        }
+
         return 0;
     }
 
