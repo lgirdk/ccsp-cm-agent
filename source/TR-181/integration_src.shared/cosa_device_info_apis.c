@@ -286,56 +286,32 @@ ANSC_STATUS CosaDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status)
 	return ANSC_STATUS_SUCCESS;
 }
 
-ANSC_STATUS CosaDmlDIGetProtocol(char *Protocol)
+ANSC_STATUS CosaDmlDIGetProtocol(char *protocol, size_t len)
 {
-    errno_t rc = -1;
-    char buf[64]={0};
-    if(syscfg_get( NULL, "fw_dl_protocol", buf, sizeof(buf)) == 0)
-    {
-        rc = strcpy_s(Protocol,MAX_PROTOCOL, buf);
-    }
-    if(rc != EOK)
-    {
-        ERR_CHK(rc);
-        return ANSC_STATUS_FAILURE;
-    }
-    CcspTraceInfo((" Download Protocol is %s \n", Protocol));
+    syscfg_get(NULL, "fw_dl_protocol", protocol, len);
+
+//  CcspTraceInfo(("Download Protocol is %s\n", protocol));
+
     return ANSC_STATUS_SUCCESS;
 }
 
-int CosaDmlDISetProtocol(PCOSA_DATAMODEL_DEVICEINFO pMyObject)
+static int CosaDmlDISetProtocol(PCOSA_DATAMODEL_DEVICEINFO pMyObject)
 {
-    if(AnscEqualString2(pMyObject->DownloadURL,"https", 5, FALSE))
-    {
-        if(syscfg_set_commit(NULL, "fw_dl_protocol", "HTTPS") != 0)
-        {
-            CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-            return -1;
-        }
-    }
-    else if(AnscEqualString2(pMyObject->DownloadURL,"http", 4, FALSE))
-    {
-        if(syscfg_set_commit(NULL, "fw_dl_protocol", "HTTP") != 0)
-        {
-            CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-            return -1;
-        }
-    }
-    else if(AnscEqualString2(pMyObject->DownloadURL,"", 1, FALSE))
-    {
-        if(syscfg_set_commit(NULL, "fw_dl_protocol", "") != 0)
-        {
-            CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-            return -1;
-        }
-    }
+    char *protocol;
+
+    if (strlen(pMyObject->DownloadURL) == 0)
+        protocol = "";
+    else if (strncasecmp(pMyObject->DownloadURL, "https", 5) == 0)
+        protocol = "HTTPS";
+    else if (strncasecmp(pMyObject->DownloadURL, "http", 4) == 0)
+        protocol = "HTTP";
     else
+        protocol = "INVALID";
+
+    if (syscfg_set_commit(NULL, "fw_dl_protocol", protocol) != 0)
     {
-        if(syscfg_set_commit(NULL, "fw_dl_protocol", "INVALID") != 0)
-        {
-            CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
-            return -1;
-        }
+        CcspTraceWarning(("%s: syscfg_set failed \n", __FUNCTION__));
+        return -1;
     }
 
     return 0;
