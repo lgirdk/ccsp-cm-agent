@@ -2538,6 +2538,8 @@ static void *GWP_sysevent_threadfunc(void *data)
         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "lnf-setup","6", 0);
 #endif
 
+                    if (!bridge_mode)
+                    {
                         // trigger multinet start
                         bool guest_enable = true;
 #ifdef _COSA_BCM_ARM_
@@ -2563,6 +2565,7 @@ static void *GWP_sysevent_threadfunc(void *data)
                             GWPROV_PRINT("%s Enable guest network interface brlan7 \n", __FUNCTION__);
                             sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET3_INSTANCE, 0);
                         }
+                    }
 #ifdef _PUMA6_ARM_
                         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET4_INSTANCE, 0);
                         sysevent_set(sysevent_fd_gs, sysevent_token_gs, "ipv4-up", LGI_SUBNET5_INSTANCE, 0);
