@@ -130,7 +130,6 @@ ANSC_STATUS CosaDmlDIGetDLStatus(ANSC_HANDLE hContext, char *DL_Status);
  */
 ANSC_STATUS CosaDmlDIGetProtocol(char *protocol, size_t len);
 
-#if defined (_COSA_INTEL_XB3_ARM_) || defined (_XB6_PROD_REQ_) || defined (_XB6_PRODUCT_REQ_)
 /**
  * @brief This function checks for energy detection and retrieves the signal status.
  *
@@ -139,7 +138,6 @@ ANSC_STATUS CosaDmlDIGetProtocol(char *protocol, size_t len);
  * @return  Returns ANSC_STATUS_SUCCESS on successfully getting signal status, Otherwise return ANSC_STATUS_FAILURE.
  */
 ANSC_STATUS CosaDmlDIGetRfSignalStatus(BOOLEAN *pRfSignalStatus);
-#endif
 
 /**
  * @brief This function validates all the possible required cases and process for downloading latest firmware.

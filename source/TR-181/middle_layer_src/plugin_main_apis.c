@@ -70,9 +70,6 @@
 #include "cosa_x_cisco_com_cablemodem_internal.h"
 #include "cosa_x_rdkcentral_com_cablemodem_internal.h"
 #include "cosa_device_info_internal.h"
-#ifdef _COSA_INTEL_XB3_ARM_
-#include <syscfg/syscfg.h>
-#endif
 
 /*PCOSA_DIAG_PLUGIN_INFO             g_pCosaDiagPluginInfo;*/
 COSAGetParamValueByPathNameProc    g_GetParamValueByPathNameProc;
