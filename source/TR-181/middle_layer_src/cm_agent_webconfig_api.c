@@ -11,7 +11,7 @@
 #include "cm_agent_webconfig_api.h"
 #include "cosa_rbus_handler_apis.h"
 #include "msgpack.h"
-#include "base64.h"
+#include <trower-base64/base64.h>
 #include "ansc_platform.h"
 #include "secure_wrapper.h"
 #include "cmagent_helpers.h"
