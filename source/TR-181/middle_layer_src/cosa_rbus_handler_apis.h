@@ -21,7 +21,7 @@
 #define  RBUS_HANDLER_APIS_H
 
 #include <stdbool.h>
-#include <rbus.h>
+#include <rbus/rbus.h>
 
 #define RBUS_COMPONENT_NAME	"RbusCMAgent"
 
