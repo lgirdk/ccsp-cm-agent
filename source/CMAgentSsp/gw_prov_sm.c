@@ -87,7 +87,7 @@
 
 #include <telemetry_busmessage_sender.h>
 #include "safec_lib_common.h"
-#if defined(ENABLE_LLD_SUPPORT) 
+#if defined(ENABLE_LLD_SUPPORT) || defined(WAN_MANAGER_UNIFICATION_ENABLED)
 #include "cm_hal.h"
 #endif
 #if defined(_XB6_PRODUCT_REQ_) || defined(_CBR2_PRODUCT_REQ_)
