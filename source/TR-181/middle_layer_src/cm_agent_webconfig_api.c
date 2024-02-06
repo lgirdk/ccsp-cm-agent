@@ -89,7 +89,7 @@ msgpack_unpack_return get_msgpack_unpack_status(char *decodedbuf, int size)
  @param cmagentdoc_t         *subdoc - Pointer to name of the subdoc
  @return 0 if update success, BLOB_EXEC_FAILURE otherwise
 ****************************************************************************************/
-int LldMarkingRules_Enable( cmagentdoc_t* gd )
+static int LldMarkingRules_Enable( cmagentdoc_t* gd )
 {
     char LLDEnableBuf[16] = {0};
     if(gd!=NULL)
