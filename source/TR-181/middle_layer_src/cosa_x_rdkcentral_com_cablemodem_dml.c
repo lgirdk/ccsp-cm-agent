@@ -1524,7 +1524,7 @@ LldMarkingRules_SetParamStringValue
 {
     UNREFERENCED_PARAMETER(hInsContext);
     AnscTraceWarning(("%s Entering \n", __FUNCTION__));
-    if( AnscEqualString(ParamName, "Data", TRUE))
+    if (strcmp(ParamName, "Data") == 0)
     {
         AnscTraceWarning((" debug %s Entering  - Data - %s \n", __FUNCTION__,pValue));
         WebConfig_blob_handler(pValue);
@@ -1549,7 +1549,7 @@ LldMarkingRules_GetParamStringValue
 {
     UNREFERENCED_PARAMETER(hInsContext);
     AnscTraceWarning(("%s Entering \n", __FUNCTION__));
-    if( AnscEqualString(ParamName, "Data", TRUE))
+    if (strcmp(ParamName, "Data") == 0)
     {
         AnscTraceWarning(("%s Entering  - Data - %s \n", __FUNCTION__,pValue));
 	return TRUE;
