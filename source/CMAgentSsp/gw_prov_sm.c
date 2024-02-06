@@ -2640,18 +2640,6 @@ static void *GWP_sysevent_threadfunc(void *data)
                     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "firewall-restart", "",0);
                 }
 
-#ifdef DSLITE_FEATURE_SUPPORT
-                /* Modification for DSLite Service */
-                if(!strcmp(val, ""))//If erouter0 IPv6 address is null
-                {
-                    v_secure_system("service_dslite stop &");
-                }
-                else
-                {
-                    v_secure_system("service_dslite restart &");
-                }
-#endif
-
                 eRouterMode = GWP_SysCfgGetInt("last_erouter_mode");
                 /*If the GW is IPv6 only mode, start the hotspot only after the IPv6 address ready*/
                 if (eRouterMode==2) 
