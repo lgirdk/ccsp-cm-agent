@@ -2102,6 +2102,11 @@ static void GWP_act_DocsisLinkDown_callback_1()
 	}
 #endif
 
+#ifdef MODEM_ONLY_SUPPORT
+    CcspTraceInfo(("%s %d - Docsis Link Down : setting ethernet port %s down\n", __FUNCTION__, __LINE__,IFNAME_ETH_0));
+    v_secure_system("ip link set dev %s down", IFNAME_ETH_0);
+#endif
+
     if (IsEthWanEnabled() == true)
     {
         return;
@@ -2248,6 +2253,25 @@ static int GWP_act_DocsisLinkUp_callback()
 		DocsisLd_cfg.HAL_DocsisLinkdownEnable=false;
 		return 0;
 	}
+#endif
+
+#ifdef MODEM_ONLY_SUPPORT
+    char macsec_ifname[ 64 ];
+    int ret;
+
+    memset(macsec_ifname, 0, sizeof(macsec_ifname));
+    sprintf(macsec_ifname, "%s", IFNAME_ETH_0);
+    ret = v_secure_system("ip link show %s | grep DOWN > /dev/null", macsec_ifname);
+
+    if (ret == 0)
+    {
+       CcspTraceInfo(("%s %d Two Box LAN Port:Re-Initializing:WAN\n", __FUNCTION__, __LINE__));
+       CcspTraceInfo(("%s %d Docsis Link Up : setting ethernet port %s UP\n", __FUNCTION__, __LINE__, macsec_ifname));
+       v_secure_system("ip link set dev %s up",macsec_ifname);
+    }
+    else
+       CcspTraceInfo(("%s %d Docsis Link Up : ethernet port %s is already UP\n", __FUNCTION__, __LINE__, macsec_ifname));
+
 #endif
 
     if (IsEthWanEnabled() == true)
