@@ -1180,6 +1180,12 @@ void docsis_gotEnable_callback(unsigned char state)
 void docsis_GetRATransInterval_callback(unsigned short raTransInterval)
 {
     int radv_trans_interval = raTransInterval;
+
+    CcspTraceInfo((" %s , ra_interval = %d \n", __FUNCTION__,radv_trans_interval));
+
+    if(radv_trans_interval < 3 || radv_trans_interval > 1800)
+	radv_trans_interval = 3;
+
     GWP_SysCfgSetInt("ra_interval", radv_trans_interval);  // save the Router Advertisement Transfer Interval Time
 }
 #endif
