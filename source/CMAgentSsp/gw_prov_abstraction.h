@@ -223,10 +223,10 @@ typedef struct __appCallBack
 	fpDocsisInited pGWP_act_DocsisInited;
 	fpProvEntry pGWP_act_ProvEntry;
 	fpDocsisEnabled pDocsis_gotEnable;
-	fpGW_Tr069PaSubTLVParse pGW_Tr069PaSubTLVParse;
 #if defined(INTEL_PUMA7)
 	fpDocsisRATransInterval pDocsis_GetRATransInterval;
 #endif
+	fpGW_Tr069PaSubTLVParse pGW_Tr069PaSubTLVParse;
 #if defined (CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION)
 	fpGW_SetTopologyMode pGW_SetTopologyMode;
 #endif
