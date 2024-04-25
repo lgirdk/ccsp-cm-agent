@@ -143,22 +143,6 @@ ssp_PnmMbi_SendTransferCompleteSignal
         void
     );
 
-/**
- * @brief Callback function received by registering Dbus path.
- *
- * @param[in] conn          Dbus connection.
- * @param[in] message       Interface details.
- * @param[in] user_data     Bus Information.
- *
- * @return  Returns ANSC_STATUS_SUCCESS on success case.
- */
-DBusHandlerResult
-CcspPandM_path_message_func
-    (
-        DBusConnection  *conn,
-        DBusMessage     *message,
-        void            *user_data
-    );
 
 /*
 static DBusHandlerResult
