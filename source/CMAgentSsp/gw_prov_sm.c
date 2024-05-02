@@ -1559,6 +1559,12 @@ static int GWP_ProcessIpv4Up(void)
         /* Now we have both */
         operMode = DOCESAFE_EROUTER_OPER_IPV4_IPV6_extIf;
     }
+    else if (operMode == DOCESAFE_EROUTER_OPER_IPV4_IPV6_extIf)
+    {
+               CcspTraceInfo((" Retaining DOCESAFE_EROUTER_OPER_IPV4_IPV6_extIf mode\n"));
+        /* Dual mode */
+               operMode=DOCESAFE_EROUTER_OPER_IPV4_IPV6_extIf;
+    }
     else
     {
         /* Only v4 */
