@@ -204,11 +204,13 @@ ssp_engage_pnm
 
     if ( g_Subsystem[0] != 0 )
     {
-        _ansc_sprintf(CrName, "%s%s", g_Subsystem, CCSP_DBUS_INTERFACE_CR);
+        /* CID: 70065: FIX*/
+        snprintf(CrName, sizeof(CrName), "%s%s", g_Subsystem, CCSP_DBUS_INTERFACE_CR);
     }
     else
     {
-        _ansc_sprintf(CrName, "%s", CCSP_DBUS_INTERFACE_CR);
+        /* CID: 70065: FIX*/
+        snprintf(CrName, sizeof(CrName), "%s", CCSP_DBUS_INTERFACE_CR);
     }
 
     returnStatus =
@@ -250,13 +252,15 @@ ssp_cancel_pnm
 
     if ( g_Subsystem[0] != 0 )
     {
-        _ansc_sprintf(CrName, "%s%s", g_Subsystem, CCSP_DBUS_INTERFACE_CR);
-        _ansc_sprintf(CpName, "%s%s", g_Subsystem, pStartCfg->ComponentName);
+        /* CID: 67123: FIX*/
+        snprintf(CrName, sizeof(CrName), "%s%s", g_Subsystem, CCSP_DBUS_INTERFACE_CR);
+        snprintf(CpName, sizeof(CpName), "%s%s", g_Subsystem, pStartCfg->ComponentName);
     }
     else
     {
-        _ansc_sprintf(CrName, "%s", CCSP_DBUS_INTERFACE_CR);
-        _ansc_sprintf(CpName, "%s", pStartCfg->ComponentName);
+        /* CID: 67123: FIX*/
+        snprintf(CrName, sizeof(CrName), "%s", CCSP_DBUS_INTERFACE_CR);
+        snprintf(CpName, sizeof(CpName), "%s", pStartCfg->ComponentName);
     }
     /* unregister component */
     nRet = CcspBaseIf_unregisterComponent(bus_handle, CrName, CpName );  
