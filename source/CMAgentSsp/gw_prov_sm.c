@@ -2076,7 +2076,12 @@ static void GWP_act_DocsisLinkDown_callback_1()
     phylink_wan_state = 0;
 	CcspTraceInfo((" Entry %s \n", __FUNCTION__));
     sysevent_set(sysevent_fd_gs, sysevent_token_gs, "phylink_wan_state", "down", 0);
-    remove("/tmp/phylink_wan_state_up");
+    /*CID: 339308: Unchecked return value fix*/
+    int ret = remove("/tmp/phylink_wan_state_up");
+    if (ret != 0)
+    {
+    	CcspTraceError(("Failed to Remove file"));
+    }
     printf("\n**************************\n");
     printf("\nsysevent set phylink_wan_state down\n");
     printf("\n**************************\n\n");
@@ -2121,7 +2126,12 @@ static void GWP_act_DocsisLinkDown_callback_2()
            sysevent_set(sysevent_fd_gs, sysevent_token_gs, "firewall-restart", "",0);
        }
 #endif
-       remove("/tmp/phylink_wan_state_up");
+       /*CID: 339307: Unchecked return value fix*/  
+       int ret = remove("/tmp/phylink_wan_state_up");
+       if (ret != 0)
+       {
+           CcspTraceError(("Removed file"));
+       }
    #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
        v_secure_system("sysevent set dhcpv6_client-stop");
    #endif
