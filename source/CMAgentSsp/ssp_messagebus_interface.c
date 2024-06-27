@@ -958,11 +958,14 @@ ssp_PnmMbi_Initialize
     )
 {
     UNREFERENCED_PARAMETER(user_data);
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
+
+    /*CID: 60617: Logically dead code - Fix*/
+    //ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
     
     printf("In %s()\n", __FUNCTION__);
-    
-    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
+
+    /*CID: 60617: Logically dead code - Fix*/
+    return 0;
 }
 
 int
@@ -972,11 +975,14 @@ ssp_PnmMbi_Finalize
     )
 {
     UNREFERENCED_PARAMETER(user_data);
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
+
+    /*CID: 61087: Logically dead code - Fix*/
+    //ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
 
     printf("In %s()\n", __FUNCTION__);
 
-    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
+    /*CID: 61087: Logically dead code - Fix*/
+    return 0;
 }
 
 
@@ -1002,10 +1008,13 @@ ssp_PnmMbi_FreeResources
 {
     UNREFERENCED_PARAMETER(priority);
     UNREFERENCED_PARAMETER(user_data);
-    ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
+
+    /*CID: 55217: Logically dead code - Fix*/
+    //ANSC_STATUS             returnStatus    = ANSC_STATUS_SUCCESS;
 
     printf("In %s()\n", __FUNCTION__);
 
-    return ( returnStatus == ANSC_STATUS_SUCCESS ) ? 0 : 1;
+    /*CID: 55217: Logically dead code - Fix*/
+    return 0;
 }
 
