@@ -102,6 +102,8 @@ ssp_PnmMbi_MessageBusEngage
     if ( ! component_id || ! path )
     {
         CcspTraceError((" !!! ssp_PnmMbi_MessageBusEngage: component_id or path is NULL !!!\n"));
+        /* CID: 67630 - Dereference after null check fix*/
+	return ANSC_STATUS_FAILURE;
     }
 
     /* Connect to message bus */
