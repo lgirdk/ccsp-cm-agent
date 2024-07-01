@@ -181,6 +181,12 @@ int rollbackcmagentFailureConf( )
 void freeResourcesCmagent(void *arg)
 {
     execData *blob_exec_data  = (execData*) arg;
+
+    if (blob_exec_data == NULL)
+    {
+    	CcspTraceWarning(("blob_exec_data is NULL"));
+            return;
+    }
   
     cmagentdoc_t *gd = (cmagentdoc_t *) blob_exec_data->user_data ;
     if ( gd != NULL )
@@ -188,11 +194,8 @@ void freeResourcesCmagent(void *arg)
         cmagentdocDestroy( gd );
         gd = NULL;
     }
-    if ( blob_exec_data != NULL )
-    {
-        free(blob_exec_data);
-        blob_exec_data = NULL ;
-    }
+    free(blob_exec_data);
+    blob_exec_data = NULL ;
 }
 
 
