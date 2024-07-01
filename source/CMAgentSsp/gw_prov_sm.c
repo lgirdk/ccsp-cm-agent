@@ -3400,14 +3400,19 @@ void *GWP_EventHandler(void *arg)
                     else
                     {
                         CcspTraceInfo(("%s %d - UpdateOperStatusThread Successfully\n", __FUNCTION__, __LINE__));
+                        snprintf(paramValue,sizeof(paramValue),"Up");
                     }
                 }else
                 {
                     CcspTraceInfo(("%s %d - UpdateOperStatusThread Already running\n", __FUNCTION__, __LINE__));
+                    snprintf(paramValue,sizeof(paramValue),"Up");
                 }
                 continue;
-#endif
+/*CID: 378968 - Structurally dead code fix*/
+#else
+                
                 snprintf(paramValue,sizeof(paramValue),"Up");
+#endif
 
             }
             break;
