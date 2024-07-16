@@ -59,6 +59,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ccsp_base_api.h>
+#include "ccsp_psm_helper.h"
 #if !defined(_PLATFORM_RASPBERRYPI_)
 #include <sys/types.h>
 #endif
@@ -385,6 +387,27 @@ static int active_mode = BRMODE_ROUTER;
 
 static GwTlvsLocalDB_t gwTlvsLocalDB;
 static pthread_t Gwp_event_tid;
+
+//After link down event, max wait 30 seconds for XLE connected devices before setting WAN down
+#define  MAX_WAIT_WFO_ENABLED_DEVICES    30
+//After link down event, max wait 240 seconds for Non-XLE devices before setting WAN down
+#define  MAX_WAIT_WFO_DISABLED_DEVICES   240
+typedef enum
+{
+    STATUS_DOWN = 0,
+    STATUS_UP,
+    STATUS_UNKNOWN
+} DOCSIS_STATUS;
+
+DOCSIS_STATUS eLinkStatus = STATUS_UNKNOWN;
+
+pthread_mutex_t gWanDownMutex = PTHREAD_MUTEX_INITIALIZER;
+static bool bThreadCreated = false;
+static bool bIsWanStatusSetDown = false;
+static bool bLinkDownSimulation = false;
+static char *g_Subsystem = "eRT." ;
+extern void *pBusHandle;
+
 #if defined (INTEL_PUMA7)
 //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
 static int sIPv4_acquired = 0;
@@ -2054,7 +2077,8 @@ static void GWP_act_DocsisLinkDown_callback_1()
 {
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
     CcspTraceInfo(("%s %d - %s updated to Down\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME));
-    v_secure_system("dmcli eRT setv %s string Down ",WAN_INTERFACE_PHY_STATUS_PARAM_NAME);
+    /*v_secure_system("dmcli eRT setv %s string Down ",WAN_INTERFACE_PHY_STATUS_PARAM_NAME);
+      Making WAN down in the call back 2 event, So commenting dmcli WAN down */
 #endif
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
@@ -2087,18 +2111,11 @@ static void GWP_act_DocsisLinkDown_callback_1()
     printf("\n**************************\n\n");
 }
 
-static void GWP_act_DocsisLinkDown_callback_2()
+static void setWanStatusDown(void)
 {
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
     CcspTraceInfo(("%s %d - %s updated to Down\n", __FUNCTION__, __LINE__,WAN_INTERFACE_PHY_STATUS_PARAM_NAME));
     v_secure_system("dmcli eRT setv %s string Down ",WAN_INTERFACE_PHY_STATUS_PARAM_NAME);
-#endif
-#if defined (WAN_FAILOVER_SUPPORTED)
-	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
-	{
-		DocsisLd_cfg.HAL_DocsisLinkdownEnable=true;
-		return;
-	}
 #endif
 
     if (IsEthWanEnabled() == true)
@@ -2141,6 +2158,166 @@ static void GWP_act_DocsisLinkDown_callback_2()
 	publishDocsisLinkStatus(false);
     publishCableModemRfSignalStatus();
 #endif
+}
+
+static void * DocsisLinkMonitorThread(void *pVoid)
+{
+    char cBuf  [64] = {0};
+    int iAllowRemoteInterfaces = 0;
+    int iMaxCount = 0;
+    if (NULL != pVoid)
+    {
+        CcspTraceInfo(("%s %d - Un Used variable \n", __FUNCTION__, __LINE__));
+    }
+
+    memset(cBuf,0,sizeof(cBuf));
+    CcspTraceInfo(("%s:%d, Entry\n", __FUNCTION__, __LINE__));
+
+    if(docsis_getCMStatus(cBuf) != RETURN_OK)
+    {
+        CcspTraceInfo(("%s:%d, Failed to read CM status",__FUNCTION__,__LINE__));
+        sleep(5);
+        if(docsis_getCMStatus(cBuf) != RETURN_OK)
+        {
+            CcspTraceInfo(("%s:%d, Failed to read CM status",__FUNCTION__,__LINE__));
+            CcspTraceInfo(("%s:%d, Not taking the WAN down, returning from here",__FUNCTION__,__LINE__));
+            bThreadCreated = false;
+            return NULL;
+        }
+    }
+    if (!strcmp(cBuf,"OPERATIONAL"))
+    {
+        int retPsmGet = CCSP_SUCCESS;
+        char *pParamVal = NULL;
+        retPsmGet = PSM_Get_Record_Value2(pBusHandle,g_Subsystem, "dmsb.wanmanager.allowremoteinterfaces", NULL, &pParamVal);
+        if ((retPsmGet == CCSP_SUCCESS) && (NULL != pParamVal))
+        {
+            CcspTraceInfo (("%s:%d, allowremoteinterfaces is %s\n", __FUNCTION__, __LINE__, pParamVal));
+            iAllowRemoteInterfaces = atoi(pParamVal);
+            if(pBusHandle != NULL)
+            {
+                ((CCSP_MESSAGE_BUS_INFO *)pBusHandle)->freefunc(pParamVal);
+            }
+        }
+        //Wait for 30 seconds to check the CM status
+        if (1 == iAllowRemoteInterfaces)
+        {
+            CcspTraceInfo(("%s %d - allowremoteinterfaces is set to 1, An XLE is connected\n", __FUNCTION__, __LINE__));
+            iMaxCount = MAX_WAIT_WFO_ENABLED_DEVICES; //Wait for 30 seconds
+        }
+        else
+        {
+            CcspTraceInfo(("%s %d - allowremoteinterfaces is set to 0, No LTE Connected\n", __FUNCTION__, __LINE__));
+            iMaxCount = MAX_WAIT_WFO_DISABLED_DEVICES; //Wait for 240 seconds
+        }
+        for (int iCount = 0; iCount < iMaxCount; iCount++)
+        {
+            sleep(1);
+            pthread_mutex_lock(&gWanDownMutex);
+            if(docsis_getCMStatus(cBuf) == RETURN_OK)
+            {
+                if (strcmp(cBuf,"OPERATIONAL"))
+                {
+                    CcspTraceInfo(("%s %d - CM status:%s\n", __FUNCTION__, __LINE__,cBuf));
+                    bIsWanStatusSetDown = true;
+                    setWanStatusDown ();
+                    pthread_mutex_unlock(&gWanDownMutex);
+                    break;
+                }
+                else if (STATUS_UP == eLinkStatus)
+                {
+                    CcspTraceInfo(("%s %d - Link is UP\n", __FUNCTION__, __LINE__));
+                    pthread_mutex_unlock(&gWanDownMutex);
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&gWanDownMutex);
+        }
+        if (0 == iAllowRemoteInterfaces)
+        {
+            /*Check ping miss status,
+                    if ping is missing and CM status is still operational, then set the wan status down
+                    if ping is not missing and CM status is still operational, then exit the thread*/
+            if(docsis_getCMStatus(cBuf) != RETURN_OK)
+            {
+                CcspTraceInfo(("%s:%d, Failed to read CM status",__FUNCTION__,__LINE__));
+            }
+            pthread_mutex_lock(&gWanDownMutex);
+            if ((!strcmp(cBuf,"OPERATIONAL")) && (STATUS_UP != eLinkStatus))
+            {
+                CcspTraceInfo(("%s %d - CM status is Still:%s\n", __FUNCTION__, __LINE__,cBuf));
+                memset(cBuf,0,sizeof(cBuf));
+                sysevent_get(sysevent_fd_gs, sysevent_token_gs, "ping-status", cBuf, sizeof(cBuf));
+                if (strcmp(cBuf,"missed") == 0)
+                {
+                    CcspTraceInfo(("%s %d - ping miss event is set, setting wan down\n", __FUNCTION__, __LINE__));
+                    bIsWanStatusSetDown = true;
+                    setWanStatusDown ();
+                }
+                else
+                {
+                    CcspTraceInfo(("%s %d - ping miss event is NOT set, Not setting wan down\n", __FUNCTION__, __LINE__));
+                }
+            }
+            bThreadCreated = false;
+            pthread_mutex_unlock(&gWanDownMutex);
+            return NULL;
+        }
+    }
+    pthread_mutex_lock(&gWanDownMutex);
+    if((STATUS_DOWN == eLinkStatus) && (false == bIsWanStatusSetDown))
+    {
+        CcspTraceInfo(("%s %d - Setting the WAN status down\n", __FUNCTION__, __LINE__));
+        bIsWanStatusSetDown = true;
+        setWanStatusDown ();
+    }
+    pthread_mutex_unlock(&gWanDownMutex);
+    bThreadCreated = false;
+    return NULL;
+}
+
+static void GWP_act_DocsisLinkDown_callback_2()
+{
+    pthread_t iLinkMonitorThreadId;
+    pthread_mutex_t lock; // Declare a mutex
+#if defined (WAN_FAILOVER_SUPPORTED)
+    if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
+    {
+        DocsisLd_cfg.HAL_DocsisLinkdownEnable=true;
+        CcspTraceInfo(("%s:%d, setting the HAL_DocsisLinkdownEnable to true\n",__FUNCTION__,__LINE__));
+        return;
+    }
+#endif
+
+    pthread_mutex_init(&lock, NULL); // Initialize the mutex
+    CcspTraceInfo(("%s:%d, Entry, mutex added \n", __FUNCTION__, __LINE__));
+    eLinkStatus = STATUS_DOWN;
+
+    if ((true == bLinkDownSimulation) && (access("/tmp/linkDownFlagSet", F_OK) != 0))
+    {
+        CcspTraceInfo(("%s %d - LinkDown simulation flag is set\n", __FUNCTION__, __LINE__));
+        setWanStatusDown ();
+        bLinkDownSimulation = false;
+    }
+    else
+    {
+        pthread_mutex_lock(&lock); // Lock the mutex
+        CcspTraceInfo(("%s %d - bThreadCreated = %d\n", __FUNCTION__, __LINE__,bThreadCreated));
+        if (false == bThreadCreated)
+        {
+            if (pthread_create(&iLinkMonitorThreadId, NULL, DocsisLinkMonitorThread, NULL))
+            {
+                CcspTraceError(("%s %d - Error creating DocsisLinkMonitorThread\n", __FUNCTION__, __LINE__));
+            }
+            else
+            {
+                CcspTraceInfo(("%s %d - DocsisLinkMonitorThread created\n", __FUNCTION__, __LINE__));
+                bThreadCreated = true;
+            }
+        }
+        pthread_mutex_unlock(&lock); // Unlock the mutex
+    }
+    pthread_mutex_destroy(&lock); // Destroy the mutex
 }
 
 static void get_dateanduptime(char *buffer, int *uptime)
@@ -2219,6 +2396,32 @@ static int GWP_act_DocsisLinkUp_callback()
     FILE *fp = NULL;
     ClbkInfo info = {0};
 
+    char cBuf  [64] = {0};
+    CcspTraceInfo(("%s %d - Entry\n", __FUNCTION__, __LINE__));
+
+    pthread_mutex_lock(&gWanDownMutex);
+    eLinkStatus = STATUS_UP;
+    memset(cBuf,0,sizeof(cBuf));
+    if(docsis_getCMStatus(cBuf) != RETURN_OK)
+    {
+        CcspTraceError(("%s %d - Failed to get CM status\n", __FUNCTION__, __LINE__));
+    }
+    CcspTraceInfo(("%s %d - CM status:%s\n", __FUNCTION__, __LINE__,cBuf));
+    CcspTraceInfo(("%s %d - bThreadCreated = %d\n", __FUNCTION__, __LINE__,bThreadCreated));
+    if ((true == bThreadCreated) && (false == bIsWanStatusSetDown))
+    {
+        if (!strcmp(cBuf,"OPERATIONAL"))
+        {
+            CcspTraceInfo(("%s %d - CM status is not down, it is Operational, So ignoring the Callback UP Event\n", __FUNCTION__, __LINE__));
+        }
+        pthread_mutex_unlock(&gWanDownMutex);
+        return 0;
+    }
+    else if (true == bIsWanStatusSetDown)
+    {
+        bIsWanStatusSetDown = false;
+    }
+    pthread_mutex_unlock(&gWanDownMutex);
 #if defined (WAN_FAILOVER_SUPPORTED)
 	if(DocsisLd_cfg.DocsisLinkdownSim_running==true)
 	{
@@ -3540,6 +3743,7 @@ void *WAN_Failover_Simulation(void *arg)
 	int rc;
 	if(cmAgent_Link_Status.DocsisLinkStatus== true)
 	{
+        bLinkDownSimulation = true;
 		/*********Docsis Link down callback*****/	
 		GWP_act_DocsisLinkDown_callback_1(); // Link down
 		GWP_act_DocsisLinkDown_callback_2();//Link down

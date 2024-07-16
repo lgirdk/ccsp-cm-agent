@@ -143,6 +143,11 @@ PCCSP_CCD_INTERFACE             pPnmCcdIf               = (PCCSP_CCD_INTERFACE  
 PCCC_MBI_INTERFACE              pPnmMbiIf               = (PCCC_MBI_INTERFACE         )NULL;
 BOOL                            g_bActive               = FALSE;
 
+static char *pComponentId = "ccsp.CmAgent";
+static char *pCfg        = CCSP_MSG_BUS_CFG;
+void *pBusHandle  = NULL;
+
+
 #ifdef ENABLE_RDK_WANMANAGER
 static pthread_t docsisclbk_tid;
 pthread_t bootInformThreadId;
@@ -1004,6 +1009,13 @@ int main(int argc, char *argv[])
     printf("Entering CM loop\n");
     CcspTraceWarning(("RDKB_SYSTEM_BOOT_UP_LOG : Entering CM loop\n"));
 
+    int iRet = CCSP_Message_Bus_Init(pComponentId, pCfg, &pBusHandle,(CCSP_MESSAGE_BUS_MALLOC) Ansc_AllocateMemory_Callback, Ansc_FreeMemory_Callback);
+    if (-1 == iRet)
+    {
+            CcspTraceError(("%s:%d. Message bus init failed\n",__FUNCTION__,__LINE__));
+            return -1;
+    }
+
     if ( bRunAsDaemon )
     {
         while(1)
@@ -1035,6 +1047,10 @@ int main(int argc, char *argv[])
         g_bActive = FALSE;
     }
 
+    if(NULL != pBusHandle)
+    {
+        CCSP_Message_Bus_Exit(pBusHandle);
+    }
     return 0;
 }
 /** @} */  //END OF GROUP CM_AGENT_APIS
