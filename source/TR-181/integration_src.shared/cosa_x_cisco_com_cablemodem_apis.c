@@ -891,6 +891,8 @@ CosaDmlCmGetDownstreamChannel
     )    
 {
     UNREFERENCED_PARAMETER(hContext);
+    ULONG RxChannelCount = 0;
+    unsigned int OfdmChannelCount = 0;
     if((!pulCount) || (!ppConf)){
         if(pulCount)
         {
@@ -899,7 +901,7 @@ CosaDmlCmGetDownstreamChannel
 	return ANSC_STATUS_FAILURE;
 	}
     /* Coverity Fix CID:79243 CHECKED_RETURN */
-    if( docsis_GetNumOfActiveRxChannels(pulCount) != RETURN_OK )
+    if( docsis_GetNumOfActiveRxChannels(&RxChannelCount) != RETURN_OK )
     {
        AnscTraceWarning(("docsis_GetNumOfActiveRxChannels is not success:%s %d\n",__FUNCTION__, __LINE__));
     }
@@ -908,7 +910,17 @@ CosaDmlCmGetDownstreamChannel
        AnscTraceWarning(("docsis_GetNumOfActiveRxChannels  is called successfully   %s, %d\n", __FUNCTION__, __LINE__));
     }
       
-    if(*pulCount) {
+    if( docsis_getDsOFDMChannelCount(&OfdmChannelCount) != RETURN_OK )
+    {
+        AnscTraceWarning(("docsis_getDsOFDMChannelCount is not success:%s %d\n",__FUNCTION__, __LINE__));
+    }
+    else
+    {
+        AnscTraceWarning(("docsis_getDsOFDMChannelCount is called successfully   %s, %d\n", __FUNCTION__, __LINE__));
+    }
+    *pulCount = RxChannelCount - OfdmChannelCount;
+
+    if(*pulCount > 0) {
 
         *ppConf = (PCOSA_CM_DS_CHANNEL)AnscAllocateMemory( sizeof(COSA_CM_DS_CHANNEL) * (*pulCount) );
          if(*ppConf == NULL)
@@ -931,6 +943,8 @@ CosaDmlCmGetUpstreamChannel
     )    
 {
     UNREFERENCED_PARAMETER(hContext);
+    ULONG TxChannelCount = 0;
+    unsigned int OfdmaChannelCount = 0;
     if((!pulCount) || (!ppConf)){
         if(pulCount)
         {
@@ -939,7 +953,7 @@ CosaDmlCmGetUpstreamChannel
 	return ANSC_STATUS_FAILURE;
 	}
    /*Coverity Fix CID: 78775 CHECKED_RETURN */
-    if( docsis_GetNumOfActiveTxChannels(pulCount) != RETURN_OK)
+    if( docsis_GetNumOfActiveTxChannels(&TxChannelCount) != RETURN_OK)
     { 
       AnscTraceWarning(("docsis_GetNumOfActiveTxChannels  is Not success: %s, %d\n", __FUNCTION__, __LINE__));
     } 
@@ -948,7 +962,17 @@ CosaDmlCmGetUpstreamChannel
      AnscTraceWarning(("docsis_GetNumOfActiveTxChannels  is called  successfully: %s, %d\n", __FUNCTION__, __LINE__));
    } 
 
-    if(*pulCount) {
+    if( docsis_getUsOFDMAChannelCount(&OfdmaChannelCount) != RETURN_OK )
+    {
+        AnscTraceWarning(("docsis_getDsOFDMChannelCount is not success:%s %d\n",__FUNCTION__, __LINE__));
+    }
+    else
+    {
+        AnscTraceWarning(("docsis_getDsOFDMChannelCount is called successfully   %s, %d\n", __FUNCTION__, __LINE__));
+    }
+    *pulCount = TxChannelCount - OfdmaChannelCount;
+
+    if(*pulCount > 0) {
 
         *ppConf = (PCOSA_CM_US_CHANNEL)AnscAllocateMemory( sizeof(COSA_CM_US_CHANNEL) * (*pulCount) );
         if(*ppConf == NULL)
