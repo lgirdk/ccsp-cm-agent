@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's LICENSE file the
 # following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2024 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-AM_CFLAGS =
-
-AM_CXXFLAGS = -std=c++11
-
-ACLOCAL_AMFLAGS = -I m4
-
-bin_PROGRAMS = CcspCMAgentSsp_gtest.bin
-
-CcspCMAgentSsp_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/gtest -I${top_srcdir}/gtest/include -I${top_srcdir}/source -I${top_srcdir}/source/include
-CcspCMAgentSsp_gtest_bin_SOURCES = CMAgentSspTest.cpp gtest_main.cpp
-CcspCMAgentSsp_gtest_bin_LDFLAGS = -lgtest -lgmock -lgcov -pthread
+SUBDIRS = CcspCMAgentDmlTest

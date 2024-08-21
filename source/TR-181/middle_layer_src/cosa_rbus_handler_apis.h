@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <rbus/rbus.h>
+#include <linux/user_base.h>
 
 #define RBUS_COMPONENT_NAME	"RbusCMAgent"
 

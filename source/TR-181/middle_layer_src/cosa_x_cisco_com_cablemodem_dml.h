@@ -281,6 +281,110 @@ X_CISCO_COM_CableModem_Rollback
     );
 
 /**
+ * @brief Retrieves the number of entries in the CMErrorCodewords table.
+ *
+ * This function is used to get the count of entries in the CMErrorCodewords table.
+ *
+ * @param[in] hInsContext Object handle.
+ *
+ * @return The number of entries in the CMErrorCodewords table.
+ */
+ULONG
+CMErrorCodewords_GetEntryCount
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+/**
+ * @brief Retrieves the specified entry from the CMErrorCodewords table.
+ *
+ * This function is used to get the specified entry from the CMErrorCodewords table.
+ *
+ * @param[in]  hInsContext The instance context pointer.
+ * @param[in]  nIndex      The index of the entry to retrieve.
+ * @param[out] pInsNumber  The instance number of the retrieved entry.
+ *
+ * @return The handle to the specified entry.
+ */
+ANSC_HANDLE
+CMErrorCodewords_GetEntry
+    (
+        ANSC_HANDLE                 hInsContext,
+        ULONG                       nIndex,
+        ULONG*                      pInsNumber
+    );
+
+/**
+ * @brief Checks if the CMErrorCodewords table has been updated.
+ *
+ * This function is used to check if the CMErrorCodewords table has been updated.
+ *
+ * @param[in] hInsContext The instance context pointer.
+ *
+ * @return True if the table has been updated, false otherwise.
+ */
+BOOL
+CMErrorCodewords_IsUpdated
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+/**
+ * @brief Synchronizes the CMErrorCodewords table.
+ *
+ * This function is used to synchronize the CMErrorCodewords table.
+ *
+ * @param[in] hInsContext The instance context pointer.
+ *
+ * @return The status of the synchronization process.
+ */
+ULONG
+CMErrorCodewords_Synchronize
+    (
+        ANSC_HANDLE                 hInsContext
+    );
+
+/**
+ * @brief Retrieves the value of the specified parameter as an unsigned long integer.
+ *
+ * This function is used to get the value of the specified parameter as an unsigned long integer.
+ *
+ * @param[in]  hInsContext The instance context pointer.
+ * @param[in]  ParamName   The name of the parameter.
+ * @param[out] puLong      The pointer to store the retrieved value.
+ *
+ * @return True if the parameter value was retrieved successfully, false otherwise.
+ */
+BOOL
+CMErrorCodewords_GetParamUlongValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG*                      puLong
+    );
+
+/**
+ * @brief Retrieves the value of the specified parameter as a string.
+ *
+ * This function is used to get the value of the specified parameter as a string.
+ *
+ * @param[in]     hInsContext The instance context pointer.
+ * @param[in]     ParamName   The name of the parameter.
+ * @param[out]    pValue      The buffer to store the retrieved value.
+ * @param[in,out] pUlSize     The size of the buffer.
+ *
+ * @return The length of the retrieved string value.
+ */
+ULONG
+CMErrorCodewords_GetParamStringValue
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        char*                       pValue,
+        ULONG*                      pUlSize
+    );
+
+/**
  * @brief This function is called to retrieve the log count associated with the DocsisLog datamodel.
  *
  * @param[in] hInsContext  Instance handle.

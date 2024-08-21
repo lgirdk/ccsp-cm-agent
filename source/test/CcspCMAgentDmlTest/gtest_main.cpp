@@ -2,7 +2,7 @@
 * If not stated otherwise in this file or this component's LICENSE file the
 * following copyright and licenses apply:
 *
-* Copyright 2015 RDK Management
+* Copyright 2024 RDK Management
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include <gmock/gmock.h>
 
 #define GTEST_DEFAULT_RESULT_FILEPATH "/tmp/Gtest_Report/"
-#define GTEST_DEFAULT_RESULT_FILENAME "CcspCMAgentSsp_gtest_report.json"
+#define GTEST_DEFAULT_RESULT_FILENAME "CcspCMAgentDmlTest_gtest_report.json"
 #define GTEST_REPORT_FILEPATH_SIZE 128
 
 GTEST_API_ int main(int argc, char *argv[])

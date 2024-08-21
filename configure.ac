@@ -24,21 +24,29 @@ AC_PREREQ([2.65])
 AC_INIT([cm_tr181], [1.0], [BUG-REPORT-ADDRESS])
 AM_INIT_AUTOMAKE
 LT_INIT
-GTEST_ENABLE_FLAG = ""
 
-AC_ARG_ENABLE([gtestapp],
-             AS_HELP_STRING([--enable-gtestapp],[enable Gtest support (default is no)]),
+AC_ARG_ENABLE([unitTestDockerSupport],
+             AS_HELP_STRING([--enable-unitTestDockerSupport],[enable Docker support for unit testing (default is no)]),
              [
-               case "${enableval}" in
-                yes) GTEST_SUPPORT_ENABLED=true
-                     GTEST_ENABLE_FLAG="-DGTEST_ENABLE"
-                     m4_if(m4_sysval,[0],[AC_CONFIG_FILES([source/test/Makefile])]);;
-                no) GTEST_SUPPORT_ENABLED=false AC_MSG_ERROR([Gtest support is disabled]);;
-                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-gtestapp ]);;
-               esac
+              case "${enableval}" in
+                yes)
+                  UNIT_TEST_DOCKER_SUPPORT=true
+                  m4_if(m4_sysval,[0],[AC_CONFIG_FILES([source/test/Makefile source/test/CcspCMAgentDmlTest/Makefile])])
+                  ;;
+                no)
+                  UNIT_TEST_DOCKER_SUPPORT=false
+                  AC_MSG_WARN([Docker support is disabled])
+                  ;;
+                *)
+                  AC_MSG_ERROR([bad value ${enableval} for --enable-unitTestDockerSupport])
+                  ;;
+              esac
              ],
-             [echo "Gtestapp is disabled"])
-AM_CONDITIONAL([WITH_GTEST_SUPPORT], [test x$GTEST_SUPPORT_ENABLED = xtrue])
+             [AC_MSG_WARN([Docker support is disabled])])
+
+AM_CONDITIONAL([UNIT_TEST_DOCKER_SUPPORT], [test x$UNIT_TEST_DOCKER_SUPPORT = xtrue])
+
+AC_SUBST([UNIT_TEST_DOCKER_SUPPORT])
 
 FEATURE_WAN_FAIL_OVER=no
 AC_ARG_ENABLE([wanfailover],
@@ -122,8 +130,6 @@ AC_CONFIG_FILES(
 	source/Makefile
 	Makefile
 )
-
-AC_SUBST(GTEST_ENABLE_FLAG)
 
 AM_CONDITIONAL([PLATFORM_PUMA7_ENABLED], [test $PLATFORM_PUMA7_ENABLED = yes])
 AM_CONDITIONAL([FEATURE_RDKB_WAN_MANAGER], [test $FEATURE_RDKB_WAN_MANAGER = yes])
