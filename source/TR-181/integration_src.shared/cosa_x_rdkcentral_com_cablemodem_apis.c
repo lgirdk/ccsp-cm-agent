@@ -82,8 +82,9 @@ static token_t sysevent_token;
 
 extern  ANSC_HANDLE   bus_handle;
 extern char           g_Subsystem[32];
-
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 static VOID CosaDmlRDKCmCheckAndDisableMoCA( VOID );
+#endif
 #endif/* _CM_HIGHSPLIT_SUPPORTED_ */
 
 ANSC_STATUS
@@ -416,6 +417,7 @@ CosaDmlRDKCmGetDiplexerSettings( unsigned int *pUSValue, unsigned int *pDSValue 
     return ANSC_STATUS_FAILURE;
 }
 
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 /* CosaDmlRDKCmCheckAndDisableMoCA() */
 static VOID CosaDmlRDKCmCheckAndDisableMoCA( VOID )
 {
@@ -477,6 +479,7 @@ static VOID CosaDmlRDKCmCheckAndDisableMoCA( VOID )
 		}
 	}
 }
+#endif
 
 int CosaDmlRDKCmDiplexerVariationCallback(CM_DIPLEXER_SETTINGS stCMDiplexerValue)
 {
@@ -513,6 +516,7 @@ int CosaDmlRDKCmDiplexerVariationCallback(CM_DIPLEXER_SETTINGS stCMDiplexerValue
 			CcspTraceInfo(("CM_HIGH_SPLIT: Failed to update cm_diplexer_mode as high_split\n"));	
 		}
 
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
         /* 
 		 * Check whether MoCA process initialized or not. 
 		 * If Initialized then configure via DBUS call
@@ -527,6 +531,7 @@ int CosaDmlRDKCmDiplexerVariationCallback(CM_DIPLEXER_SETTINGS stCMDiplexerValue
         {   
             CcspTraceInfo(("CM_HIGH_SPLIT: MoCA process is not up so unable to disable MoCA by using IPC\n"));
         }
+#endif
 	}
 	else
 	{
