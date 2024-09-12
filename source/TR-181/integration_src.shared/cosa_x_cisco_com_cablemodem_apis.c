@@ -904,6 +904,7 @@ CosaDmlCmGetDownstreamChannel
     if( docsis_GetNumOfActiveRxChannels(&RxChannelCount) != RETURN_OK )
     {
        AnscTraceWarning(("docsis_GetNumOfActiveRxChannels is not success:%s %d\n",__FUNCTION__, __LINE__));
+       return ANSC_STATUS_FAILURE;
     }
     else
     {
@@ -1051,6 +1052,7 @@ CosaDmlCmGetCMErrorCodewords
     if( docsis_GetNumOfActiveRxChannels(pulCount) != RETURN_OK)
     {
         AnscTraceWarning(("docsis_GetNumOfActiveRxChannels  is Not success   %s, %d\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
     }
     else
     {
